@@ -29,6 +29,7 @@
   --yc-details: 320px;
   --yc-commandbar: 56px;
   --yc-statusbar: 28px;
+  --yc-row-h: 52px;
 
   --yc-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
   --yc-shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
@@ -93,6 +94,27 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* 自定义壁纸层：面板保持不透明，壁纸从空隙中透出 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -48px;
+  z-index: -1;
+  background-image: var(--yc-wallpaper, none);
+  background-size: cover;
+  background-position: center;
+  filter: blur(var(--yc-wall-blur, 12px));
+  pointer-events: none;
+}
+
+/* 显示密度 */
+html[data-yc-density="compact"] {
+  --yc-row-h: 44px;
+}
+html[data-yc-density="comfortable"] {
+  --yc-row-h: 60px;
+}
+
 /* 旧版 main 的左边距由 .yc-main 接管 */
 main.yc-main {
   margin: 0 0 0 var(--yc-sidebar);
@@ -109,8 +131,94 @@ body.yc-files-mode main.yc-main {
   overflow: hidden;
 }
 
+/* 设置页占满整屏 */
+body.yc-settings-mode {
+  padding-top: 0;
+}
+body.yc-settings-mode main.yc-main {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 设置页内容：旧版卡片统一成 YC 卡片 */
+.yc-settings__content .card {
+  background: var(--yc-surface);
+  border: 1px solid var(--yc-border);
+  border-radius: 14px;
+  box-shadow: none;
+  color: var(--yc-text-2);
+  overflow: hidden;
+}
+.yc-settings__content .card .card-title {
+  padding: 16px 18px 0;
+}
+.yc-settings__content .card > div {
+  padding: 12px 18px;
+}
+.yc-settings__content .card > div:first-child {
+  padding-top: 16px;
+}
+.yc-settings__content .card > div:last-child {
+  padding-bottom: 16px;
+}
+.yc-settings__content .card .card-title h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--yc-text);
+}
+.yc-settings__content .card h3 {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--yc-muted);
+  margin: 20px 0 8px;
+}
+.yc-settings__content .card p {
+  font-size: 13px;
+  line-height: 1.75;
+}
+.yc-settings__content .card .small {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--yc-muted);
+}
+.yc-settings__content .card input[type="text"],
+.yc-settings__content .card input[type="password"],
+.yc-settings__content .card input[type="number"],
+.yc-settings__content .card select,
+.yc-settings__content .card textarea {
+  border: 1px solid var(--yc-border);
+  border-radius: 9px;
+  background: var(--yc-surface-2);
+  color: var(--yc-text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+}
+.yc-settings__content .card input[type="text"]:focus,
+.yc-settings__content .card input[type="password"]:focus,
+.yc-settings__content .card select:focus,
+.yc-settings__content .card textarea:focus {
+  outline: none;
+  border-color: var(--yc-accent);
+  background: var(--yc-surface);
+}
+.yc-settings__content .card .button {
+  border-radius: 9px;
+  font-family: inherit;
+}
+.yc-settings__content .card table th {
+  color: var(--yc-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.yc-settings__content .card table td,
+.yc-settings__content .card table th {
+  border-color: var(--yc-border);
+  font-size: 12.5px;
+}
+
 /* 设置 / 分享等仍在使用旧版顶栏，让它从侧栏右侧开始 */
-main.yc-main > div > header {
+main.yc-main > div > header:not(.yc-settings__bar) {
   left: var(--yc-sidebar);
   width: calc(100% - var(--yc-sidebar));
   background: var(--yc-surface);
@@ -123,7 +231,7 @@ main.yc-main > div > header {
     margin-left: 0;
     width: 100%;
   }
-  main.yc-main > div > header {
+  main.yc-main > div > header:not(.yc-settings__bar) {
     left: 0;
     width: 100%;
   }

@@ -26,7 +26,7 @@
       <span class="yc-login__brandver">YCHub v{{ displayVersion }}</span>
     </aside>
 
-    <main class="yc-login__pane">
+    <div class="yc-login__pane">
       <form class="yc-login__card" @submit="submit">
         <div class="yc-login__logo-mobile">
           <span class="yc-login__mark">YC</span>
@@ -94,7 +94,7 @@
           登录状态会保存在此浏览器，公共电脑请使用后退出
         </p>
       </form>
-    </main>
+    </div>
   </div>
 </template>
 

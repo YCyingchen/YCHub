@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 const KEY = "ychub.ui.v1";
 
 type YcViewMode = "list" | "grid";
+type YcDensity = "compact" | "cozy" | "comfortable";
 
 interface YcEntry {
   path: string;
@@ -14,7 +15,11 @@ interface Persisted {
   recent: YcEntry[];
   viewMode: YcViewMode;
   detailsOpen: boolean;
+  accent: string;
+  density: YcDensity;
 }
+
+const DEFAULT_ACCENT = "#4f6bff";
 
 function load(): Persisted {
   const fallback: Persisted = {
@@ -22,6 +27,8 @@ function load(): Persisted {
     recent: [],
     viewMode: "list",
     detailsOpen: true,
+    accent: DEFAULT_ACCENT,
+    density: "cozy",
   };
   try {
     const raw = localStorage.getItem(KEY);
@@ -32,10 +39,24 @@ function load(): Persisted {
       recent: Array.isArray(data.recent) ? data.recent : [],
       viewMode: data.viewMode === "grid" ? "grid" : "list",
       detailsOpen: data.detailsOpen !== false,
+      accent: typeof data.accent === "string" ? data.accent : DEFAULT_ACCENT,
+      density:
+        data.density === "compact" || data.density === "comfortable"
+          ? data.density
+          : "cozy",
     };
   } catch {
     return fallback;
   }
+}
+
+/** 把强调色与密度写到根元素，CSS 变量统一生效 */
+export function applyYcAppearance(accent: string, density: YcDensity) {
+  const root = document.documentElement;
+  root.style.setProperty("--yc-accent", accent);
+  root.style.setProperty("--yc-accent-hover", accent);
+  root.style.setProperty("--blue", accent);
+  root.dataset.ycDensity = density;
 }
 
 export const useYcStore = defineStore("yc", {
@@ -51,12 +72,27 @@ export const useYcStore = defineStore("yc", {
         recent: this.recent,
         viewMode: this.viewMode,
         detailsOpen: this.detailsOpen,
+        accent: this.accent,
+        density: this.density,
       };
       try {
         localStorage.setItem(KEY, JSON.stringify(data));
       } catch {
         /* 存储满或被禁用时静默失败 */
       }
+    },
+    applyAppearance() {
+      applyYcAppearance(this.accent, this.density);
+    },
+    setAccent(accent: string) {
+      this.accent = accent;
+      applyYcAppearance(this.accent, this.density);
+      this.persist();
+    },
+    setDensity(density: YcDensity) {
+      this.density = density;
+      applyYcAppearance(this.accent, this.density);
+      this.persist();
     },
     setViewMode(mode: YcViewMode) {
       this.viewMode = mode;

@@ -11,13 +11,30 @@ import { useI18n } from "vue-i18n";
 import { setHtmlLocale } from "./i18n";
 import { getMediaPreference, getTheme, setTheme } from "./utils/theme";
 import { name } from "./utils/constants";
+import { useYcStore } from "./stores/yc";
 
 const { locale } = useI18n();
 
-const userTheme = ref<UserTheme>(getTheme() || getMediaPreference());
+const yc = useYcStore();
+
+const storedTheme = localStorage.getItem("ychub.theme");
+const userTheme = ref<UserTheme>(
+  storedTheme === "dark" || storedTheme === "light"
+    ? storedTheme
+    : getTheme() || getMediaPreference()
+);
 
 onMounted(() => {
   setTheme(userTheme.value);
+  yc.applyAppearance();
+
+  const wall = localStorage.getItem("ychub.wallpaper");
+  const blur = localStorage.getItem("ychub.blur") ?? "12";
+  document.documentElement.style.setProperty(
+    "--yc-wallpaper",
+    wall ? `url("${wall}")` : "none"
+  );
+  document.documentElement.style.setProperty("--yc-wall-blur", `${blur}px`);
   setHtmlLocale(locale.value);
   // this might be null during HMR
   const loading = document.getElementById("loading");

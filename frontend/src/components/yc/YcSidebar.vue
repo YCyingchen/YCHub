@@ -106,7 +106,11 @@
 
       <template v-if="isAdmin">
         <p class="yc-nav__caption">系统</p>
-        <button class="yc-nav__item" @click="go('/settings/global')">
+        <button
+          class="yc-nav__item"
+          :class="{ 'is-active': route.path.startsWith('/settings') }"
+          @click="go('/settings/global')"
+        >
           <YcIcon name="settings" :size="18" />
           <span>设置</span>
         </button>
@@ -204,11 +208,10 @@ const logout = () => {
 let usageController: AbortController | null = null;
 const fetchUsage = async () => {
   if (!isLoggedIn.value) return;
-  const path = route.path.endsWith("/") ? route.path : route.path + "/";
   usageController?.abort();
   usageController = new AbortController();
   try {
-    const res = await api.usage(path, usageController.signal);
+    const res = await api.usage("/files/", usageController.signal);
     used.value = prettyBytes(res.used, { binary: true });
     total.value = prettyBytes(res.total, { binary: true });
     usedPercent.value =

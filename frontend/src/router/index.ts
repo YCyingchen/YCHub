@@ -10,6 +10,9 @@ import Settings from "@/views/Settings.vue";
 import GlobalSettings from "@/views/settings/Global.vue";
 import ProfileSettings from "@/views/settings/Profile.vue";
 import Shares from "@/views/settings/Shares.vue";
+import Appearance from "@/views/settings/Appearance.vue";
+import Storage from "@/views/settings/Storage.vue";
+import About from "@/views/settings/About.vue";
 import Errors from "@/views/Errors.vue";
 import { useAuthStore } from "@/stores/auth";
 import { baseURL, name } from "@/utils/constants";
@@ -24,6 +27,9 @@ const titles = {
   Settings: "sidebar.settings",
   ProfileSettings: "settings.profileSettings",
   Shares: "settings.shareManagement",
+  AppearanceSettings: "外观",
+  StorageSettings: "存储",
+  AboutSettings: "关于",
   GlobalSettings: "settings.globalSettings",
   Users: "settings.users",
   User: "settings.user",
@@ -75,9 +81,24 @@ const routes = [
         name: "Settings",
         component: Settings,
         redirect: {
-          path: "/settings/profile",
+          path: "/settings/appearance",
         },
         children: [
+          {
+            path: "appearance",
+            name: "AppearanceSettings",
+            component: Appearance,
+          },
+          {
+            path: "storage",
+            name: "StorageSettings",
+            component: Storage,
+          },
+          {
+            path: "about",
+            name: "AboutSettings",
+            component: About,
+          },
           {
             path: "profile",
             name: "ProfileSettings",
