@@ -221,8 +221,12 @@ const openPath = () => {
 .yc-tree__row.is-mount .yc-tree__chevron {
   position: absolute;
   top: 50%;
-  right: 8px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
   margin: 0;
+  border-radius: 50%;
+  background: var(--yc-surface-2);
   transform: translateY(-50%);
 }
 .yc-tree__row.is-mount:hover {
