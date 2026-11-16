@@ -395,12 +395,17 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
     min-height: var(--yc-grid-h);
     padding: var(--yc-card-pad);
     gap: 3px;
+    justify-content: center;
   }
 
   .yc-card__icon {
     width: var(--yc-grid-icon);
     height: var(--yc-grid-icon);
-    margin: 2px auto 4px;
+    margin: 0 auto 4px;
+  }
+
+  .yc-card__icon.has-thumb {
+    aspect-ratio: 4 / 5;
   }
 
   .yc-card__icon :deep(.yc-icon) {
@@ -410,6 +415,7 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 
   .yc-card__name {
     font-size: var(--yc-grid-name);
+    margin-top: 0;
   }
 
   .yc-card__meta {
