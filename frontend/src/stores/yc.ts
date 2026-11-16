@@ -19,6 +19,7 @@ interface Persisted {
   accent: string;
   density: YcDensity;
   iconSize: YcIconSize;
+  grouped: boolean;
 }
 
 const DEFAULT_ACCENT = "#4f6bff";
@@ -32,6 +33,7 @@ function load(): Persisted {
     accent: DEFAULT_ACCENT,
     density: "cozy",
     iconSize: "medium",
+    grouped: true,
   };
   try {
     const raw = localStorage.getItem(KEY);
@@ -51,6 +53,7 @@ function load(): Persisted {
         data.iconSize === "small" || data.iconSize === "large"
           ? data.iconSize
           : "medium",
+      grouped: data.grouped !== false,
     };
   } catch {
     return fallback;
@@ -82,6 +85,7 @@ export const useYcStore = defineStore("yc", {
         accent: this.accent,
         density: this.density,
         iconSize: this.iconSize,
+        grouped: this.grouped,
       };
       try {
         localStorage.setItem(KEY, JSON.stringify(data));
@@ -108,6 +112,14 @@ export const useYcStore = defineStore("yc", {
     },
     setIconSize(size: YcIconSize) {
       this.iconSize = size;
+      this.persist();
+    },
+    setGrouped(grouped: boolean) {
+      this.grouped = grouped;
+      this.persist();
+    },
+    toggleGrouped() {
+      this.grouped = !this.grouped;
       this.persist();
     },
     toggleDetails() {

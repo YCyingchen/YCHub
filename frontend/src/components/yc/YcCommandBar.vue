@@ -33,41 +33,101 @@
       <kbd>Ctrl K</kbd>
     </button>
 
-    <div class="yc-segment" role="group" aria-label="视图">
+    <div ref="viewRef" class="yc-view">
       <button
-        class="yc-segment__btn"
-        :class="{ 'is-active': yc.viewMode === 'list' }"
-        title="列表视图"
-        @click="yc.setViewMode('list')"
+        class="yc-iconbtn yc-view__trigger"
+        :class="{ 'is-active': viewOpen }"
+        title="视图设置"
+        @click="viewOpen = !viewOpen"
       >
-        <YcIcon name="list" :size="17" />
+        <YcIcon
+          :name="yc.viewMode === 'grid' ? 'grid' : 'list'"
+          :size="18"
+        />
+        <YcIcon name="chevron-down" :size="11" class="yc-view__caret" />
       </button>
-      <button
-        class="yc-segment__btn"
-        :class="{ 'is-active': yc.viewMode === 'grid' }"
-        title="图标视图"
-        @click="yc.setViewMode('grid')"
-      >
-        <YcIcon name="grid" :size="16" />
-      </button>
-    </div>
 
-    <div
-      v-if="yc.viewMode === 'grid'"
-      class="yc-size"
-      role="group"
-      aria-label="图标大小"
-    >
-      <button
-        v-for="size in iconSizes"
-        :key="size.id"
-        class="yc-size__btn"
-        :class="{ 'is-active': yc.iconSize === size.id }"
-        :title="`${size.label}图标`"
-        @click="yc.setIconSize(size.id)"
-      >
-        {{ size.label }}
-      </button>
+      <div v-if="viewOpen" class="yc-view__menu">
+        <p class="yc-view__caption">视图</p>
+        <button
+          class="yc-view__item"
+          :class="{ 'is-active': yc.viewMode === 'list' }"
+          @click="setView('list')"
+        >
+          <YcIcon name="list" :size="16" />
+          <span>列表</span>
+          <YcIcon
+            v-if="yc.viewMode === 'list'"
+            name="check"
+            :size="14"
+            class="yc-view__check"
+          />
+        </button>
+        <button
+          class="yc-view__item"
+          :class="{ 'is-active': yc.viewMode === 'grid' }"
+          @click="setView('grid')"
+        >
+          <YcIcon name="grid" :size="16" />
+          <span>图标</span>
+          <YcIcon
+            v-if="yc.viewMode === 'grid'"
+            name="check"
+            :size="14"
+            class="yc-view__check"
+          />
+        </button>
+
+        <div class="yc-view__sep" />
+
+        <div class="yc-view__subwrap">
+          <button
+            class="yc-view__item"
+            :class="{ 'is-disabled': yc.viewMode !== 'grid' }"
+            @click="toggleSize"
+          >
+            <YcIcon name="grid" :size="16" />
+            <span class="yc-view__grow">
+              图标大小
+              <small>{{ sizeLabel }}</small>
+            </span>
+            <YcIcon name="chevron-right" :size="13" class="yc-view__arrow" />
+          </button>
+          <div v-if="sizeOpen && yc.viewMode === 'grid'" class="yc-view__submenu">
+            <button
+              v-for="size in iconSizes"
+              :key="size.id"
+              class="yc-view__item"
+              :class="{ 'is-active': yc.iconSize === size.id }"
+              @click="chooseSize(size.id)"
+            >
+              <span>{{ size.label }}</span>
+              <YcIcon
+                v-if="yc.iconSize === size.id"
+                name="check"
+                :size="14"
+                class="yc-view__check"
+              />
+            </button>
+          </div>
+        </div>
+
+        <div class="yc-view__sep" />
+
+        <button class="yc-view__item" @click="yc.toggleGrouped()">
+          <YcIcon name="columns" :size="16" />
+          <span class="yc-view__grow">
+            分组显示
+            <small>文件夹在上，文件在下</small>
+          </span>
+          <YcIcon
+            v-if="yc.grouped"
+            name="check"
+            :size="14"
+            class="yc-view__check"
+          />
+        </button>
+      </div>
     </div>
 
     <button
@@ -109,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useFileStore } from "@/stores/file";
 import { useLayoutStore } from "@/stores/layout";
@@ -125,12 +185,61 @@ const authStore = useAuthStore();
 const yc = useYcStore();
 
 const newOpen = ref(false);
+const viewOpen = ref(false);
+const sizeOpen = ref(false);
+const viewRef = ref<HTMLElement | null>(null);
 
 const iconSizes = [
   { id: "small", label: "小" },
   { id: "medium", label: "中" },
   { id: "large", label: "大" },
 ] as const;
+
+const sizeLabel = computed(
+  () => iconSizes.find((size) => size.id === yc.iconSize)?.label ?? "中"
+);
+
+const setView = (mode: "list" | "grid") => {
+  yc.setViewMode(mode);
+  viewOpen.value = false;
+  sizeOpen.value = false;
+};
+
+const chooseSize = (id: "small" | "medium" | "large") => {
+  yc.setIconSize(id);
+  viewOpen.value = false;
+  sizeOpen.value = false;
+};
+
+const toggleSize = () => {
+  if (yc.viewMode !== "grid") return;
+  sizeOpen.value = !sizeOpen.value;
+};
+
+const onDocClick = (event: MouseEvent) => {
+  if (!viewOpen.value) return;
+  const target = event.target as Node | null;
+  if (target && viewRef.value && !viewRef.value.contains(target)) {
+    viewOpen.value = false;
+    sizeOpen.value = false;
+  }
+};
+
+const onEsc = (event: KeyboardEvent) => {
+  if (event.key !== "Escape") return;
+  viewOpen.value = false;
+  sizeOpen.value = false;
+};
+
+onMounted(() => {
+  document.addEventListener("click", onDocClick, true);
+  window.addEventListener("keydown", onEsc);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", onDocClick, true);
+  window.removeEventListener("keydown", onEsc);
+});
 
 const crumbs = computed(() => {
   const path = route.path.replace(/^\/files\/?/, "");
@@ -292,59 +401,110 @@ const newPrompt = (name: string) => {
   background: var(--yc-surface);
 }
 
-.yc-segment {
-  display: flex;
-  padding: 2px;
-  gap: 2px;
-  border: 1px solid var(--yc-border);
-  border-radius: var(--yc-radius-sm);
-  background: var(--yc-surface-2);
+.yc-view {
+  position: relative;
   flex: none;
 }
-.yc-segment__btn {
-  width: 28px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--yc-muted);
-  cursor: pointer;
+.yc-view__trigger {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  width: auto;
+  padding: 0 5px;
 }
-.yc-segment__btn.is-active {
+.yc-view__caret {
+  color: var(--yc-muted);
+}
+.yc-view__menu {
+  position: absolute;
+  right: 0;
+  top: 40px;
+  min-width: 196px;
+  padding: 6px;
   background: var(--yc-surface);
-  color: var(--yc-accent);
-  box-shadow: var(--yc-shadow-sm);
-}
-
-.yc-size {
-  display: flex;
-  gap: 2px;
-  padding: 2px;
   border: 1px solid var(--yc-border);
-  border-radius: var(--yc-radius-sm);
-  background: var(--yc-surface-2);
-  flex: none;
+  border-radius: var(--yc-radius);
+  box-shadow: var(--yc-shadow-lg);
+  z-index: 60;
 }
-.yc-size__btn {
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
+.yc-view__caption {
+  margin: 6px 10px 4px;
+  font-size: 10.5px;
   color: var(--yc-muted);
+}
+.yc-view__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--yc-text-2);
   font-family: inherit;
-  font-size: 11.5px;
+  font-size: 12.5px;
   cursor: pointer;
+  text-align: left;
 }
-.yc-size__btn.is-active {
-  background: var(--yc-surface);
+.yc-view__item:hover {
+  background: var(--yc-accent-soft);
+  color: var(--yc-accent);
+}
+.yc-view__item.is-active {
   color: var(--yc-accent);
   font-weight: 600;
-  box-shadow: var(--yc-shadow-sm);
+}
+.yc-view__item.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.yc-view__item.is-disabled:hover {
+  background: transparent;
+  color: var(--yc-text-2);
+}
+.yc-view__check {
+  margin-left: auto;
+  color: var(--yc-accent);
+}
+.yc-view__grow {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.yc-view__grow small {
+  font-size: 10.5px;
+  font-weight: 400;
+  color: var(--yc-muted);
+}
+.yc-view__arrow {
+  color: var(--yc-muted);
+}
+.yc-view__sep {
+  height: 1px;
+  margin: 5px 6px;
+  background: var(--yc-border);
+}
+.yc-view__subwrap {
+  position: relative;
+}
+.yc-view__submenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 6px;
+  min-width: 108px;
+  padding: 5px;
+  background: var(--yc-surface);
+  border: 1px solid var(--yc-border);
+  border-radius: 10px;
+  box-shadow: var(--yc-shadow);
+  z-index: 61;
+}
+.yc-view__submenu .yc-view__item {
+  padding: 7px 10px;
 }
 
 .yc-commandbar__upload {
@@ -417,12 +577,6 @@ const newPrompt = (name: string) => {
 }
 
 @media (max-width: 620px) {
-  .yc-segment {
-    display: flex;
-  }
-  .yc-size {
-    display: none;
-  }
   .yc-commandbar__upload,
   [title="刷新"] {
     display: none;
@@ -433,6 +587,17 @@ const newPrompt = (name: string) => {
   }
   .yc-btn {
     padding: 0 10px;
+  }
+  .yc-view__menu {
+    min-width: 180px;
+  }
+  .yc-view__submenu {
+    position: static;
+    margin: 2px 0 4px;
+    padding: 0 0 0 22px;
+    min-width: 0;
+    border: 0;
+    box-shadow: none;
   }
 }
 </style>

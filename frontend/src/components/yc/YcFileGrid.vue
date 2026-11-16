@@ -1,39 +1,54 @@
 <template>
-  <div class="yc-grid" :class="`is-${yc.iconSize}`" role="grid">
-    <div
-      v-for="item in items"
-      :key="item.index"
-      class="yc-card"
-      :class="{ 'is-selected': selected.includes(item.index) }"
-      role="gridcell"
-      tabindex="0"
-      @click="onClick(item, $event)"
-      @dblclick="$emit('open', item)"
-      @keydown.enter="$emit('open', item)"
-      @contextmenu.prevent="onContext(item, $event)"
-    >
-      <span class="yc-card__icon" :class="`is-${typeOf(item).kind}`">
-        <img
-          v-if="thumbOf(item)"
-          :src="thumbOf(item) || ''"
-          :alt="item.name"
-          loading="lazy"
-          @error="($event.target as HTMLImageElement).style.display = 'none'"
+  <div class="yc-grids" :class="`is-${yc.iconSize}`">
+    <template v-for="group in groups" :key="group.key">
+      <div v-if="group.label" class="yc-group__title">
+        <YcIcon
+          :name="group.key === 'dirs' ? 'folder' : 'file'"
+          :size="14"
         />
-        <YcIcon v-else :name="typeOf(item).icon" :size="iconPx" />
-      </span>
-      <span class="yc-card__name">{{ item.name }}</span>
-      <span class="yc-card__meta">
-        {{ item.isDir ? "文件夹" : sizeOf(item.size) }}
-      </span>
-      <button
-        class="yc-card__more"
-        title="更多"
-        @click.stop="$emit('context', item, $event)"
-      >
-        <YcIcon name="more" :size="15" />
-      </button>
-    </div>
+        <span>{{ group.label }}</span>
+        <span class="yc-group__count">{{ group.items.length }}</span>
+      </div>
+
+      <div class="yc-grid" role="grid">
+        <div
+          v-for="item in group.items"
+          :key="item.index"
+          class="yc-card"
+          :class="{ 'is-selected': selected.includes(item.index) }"
+          role="gridcell"
+          tabindex="0"
+          @click="onClick(item, $event)"
+          @dblclick="$emit('open', item)"
+          @keydown.enter="$emit('open', item)"
+          @contextmenu.prevent="onContext(item, $event)"
+        >
+          <span class="yc-card__icon" :class="`is-${typeOf(item).kind}`">
+            <img
+              v-if="thumbOf(item)"
+              :src="thumbOf(item) || ''"
+              :alt="item.name"
+              loading="lazy"
+              @error="
+                ($event.target as HTMLImageElement).style.display = 'none'
+              "
+            />
+            <YcIcon v-else :name="typeOf(item).icon" :size="iconPx" />
+          </span>
+          <span class="yc-card__name">{{ item.name }}</span>
+          <span class="yc-card__meta">
+            {{ item.isDir ? "文件夹" : sizeOf(item.size) }}
+          </span>
+          <button
+            class="yc-card__more"
+            title="更多"
+            @click.stop="$emit('context', item, $event)"
+          >
+            <YcIcon name="more" :size="15" />
+          </button>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -50,6 +65,7 @@ import YcIcon from "@/components/yc/YcIcon.vue";
 const props = defineProps<{
   items: ResourceItem[];
   selected: number[];
+  grouped?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -60,6 +76,24 @@ const emit = defineEmits<{
 
 const fileStore = useFileStore();
 const yc = useYcStore();
+
+const groups = computed(() => {
+  if (!props.grouped) {
+    return [{ key: "all", label: "", items: props.items }];
+  }
+
+  const dirs = props.items.filter((item) => item.isDir);
+  const files = props.items.filter((item) => !item.isDir);
+  const result: { key: string; label: string; items: ResourceItem[] }[] = [];
+
+  if (dirs.length) {
+    result.push({ key: "dirs", label: "文件夹", items: dirs });
+  }
+  if (files.length) {
+    result.push({ key: "files", label: "文件", items: files });
+  }
+  return result;
+});
 
 const iconPx = computed(() => {
   if (yc.iconSize === "small") return 28;
@@ -110,7 +144,7 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 </script>
 
 <style scoped>
-.yc-grid {
+.yc-grids {
   --yc-grid-icon: 92px;
   --yc-grid-radius: 18px;
   --yc-grid-w: 164px;
@@ -119,14 +153,10 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
   --yc-grid-pad: 14px;
   --yc-card-pad: 13px;
   --yc-grid-name: 13px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, var(--yc-grid-w));
-  justify-content: center;
-  gap: var(--yc-grid-gap);
   padding: var(--yc-grid-pad);
 }
 
-.yc-grid.is-small {
+.yc-grids.is-small {
   --yc-grid-icon: 64px;
   --yc-grid-radius: 14px;
   --yc-grid-w: 124px;
@@ -137,7 +167,7 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
   --yc-grid-name: 12px;
 }
 
-.yc-grid.is-large {
+.yc-grids.is-large {
   --yc-grid-icon: 128px;
   --yc-grid-radius: 24px;
   --yc-grid-w: 208px;
@@ -146,6 +176,39 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
   --yc-grid-pad: 18px;
   --yc-card-pad: 16px;
   --yc-grid-name: 13.5px;
+}
+
+.yc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--yc-grid-w));
+  justify-content: center;
+  gap: var(--yc-grid-gap);
+}
+
+.yc-group__title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 10px;
+  margin: 8px 0 6px;
+  color: var(--yc-text-2);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.yc-group__title:first-child {
+  margin-top: 0;
+}
+.yc-group__title :deep(.yc-icon) {
+  color: var(--yc-muted);
+}
+.yc-group__count {
+  font-weight: 400;
+  color: var(--yc-muted);
+}
+
+.yc-grid + .yc-grid {
+  margin-top: 2px;
 }
 
 .yc-card {
@@ -254,7 +317,7 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 }
 
 @media (max-width: 900px) {
-  .yc-grid.is-large {
+  .yc-grids.is-large {
     --yc-grid-w: 172px;
     --yc-grid-h: 236px;
     --yc-grid-icon: 104px;

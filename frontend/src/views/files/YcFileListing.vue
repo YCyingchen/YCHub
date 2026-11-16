@@ -36,6 +36,7 @@
             :items="items"
             :selected="fileStore.selected"
             :sorting="sorting"
+            :grouped="yc.grouped"
             @open="open"
             @context="openMenu"
             @sort="sort"
@@ -44,6 +45,7 @@
             v-else
             :items="items"
             :selected="fileStore.selected"
+            :grouped="yc.grouped"
             @open="open"
             @context="openMenu"
           />

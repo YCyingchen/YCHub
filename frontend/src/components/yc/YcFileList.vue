@@ -42,50 +42,62 @@
       >
     </div>
 
-    <div
-      v-for="item in items"
-      :key="item.index"
-      class="yc-row"
-      :class="{
-        'is-selected': selected.includes(item.index),
-        'is-dir': item.isDir,
-      }"
-      role="row"
-      tabindex="0"
-      @click="onClick(item, $event)"
-      @dblclick="$emit('open', item)"
-      @keydown.enter="$emit('open', item)"
-      @keydown.space.prevent="$emit('open', item)"
-      @contextmenu.prevent="onContext(item, $event)"
-    >
-      <span class="yc-typeicon" :class="`is-${typeOf(item).kind}`">
-        <YcIcon :name="typeOf(item).icon" :size="17" />
-      </span>
-      <span class="yc-row__name">
-        <span class="yc-row__title">{{ item.name }}</span>
-        <span class="yc-row__sub">{{ typeOf(item).label }}</span>
-      </span>
-      <span class="yc-table__cell yc-table__cell--size yc-row__meta">
-        {{ item.isDir ? "—" : sizeOf(item.size) }}
-      </span>
-      <span class="yc-table__cell yc-table__cell--time yc-row__meta">
-        {{ timeOf(item.modified) }}
-      </span>
-      <span class="yc-table__cell yc-table__cell--tag">
-        <span class="yc-pill">{{ typeOf(item).label }}</span>
-      </span>
-      <button
-        class="yc-row__more"
-        title="更多"
-        @click.stop="$emit('context', item, $event)"
+    <template v-for="group in groups" :key="group.key">
+      <div v-if="group.label" class="yc-group__title">
+        <YcIcon
+          :name="group.key === 'dirs' ? 'folder' : 'file'"
+          :size="14"
+        />
+        <span>{{ group.label }}</span>
+        <span class="yc-group__count">{{ group.items.length }}</span>
+      </div>
+
+      <div
+        v-for="item in group.items"
+        :key="item.index"
+        class="yc-row"
+        :class="{
+          'is-selected': selected.includes(item.index),
+          'is-dir': item.isDir,
+        }"
+        role="row"
+        tabindex="0"
+        @click="onClick(item, $event)"
+        @dblclick="$emit('open', item)"
+        @keydown.enter="$emit('open', item)"
+        @keydown.space.prevent="$emit('open', item)"
+        @contextmenu.prevent="onContext(item, $event)"
       >
-        <YcIcon name="more" :size="16" />
-      </button>
-    </div>
+        <span class="yc-typeicon" :class="`is-${typeOf(item).kind}`">
+          <YcIcon :name="typeOf(item).icon" :size="17" />
+        </span>
+        <span class="yc-row__name">
+          <span class="yc-row__title">{{ item.name }}</span>
+          <span class="yc-row__sub">{{ typeOf(item).label }}</span>
+        </span>
+        <span class="yc-table__cell yc-table__cell--size yc-row__meta">
+          {{ item.isDir ? "—" : sizeOf(item.size) }}
+        </span>
+        <span class="yc-table__cell yc-table__cell--time yc-row__meta">
+          {{ timeOf(item.modified) }}
+        </span>
+        <span class="yc-table__cell yc-table__cell--tag">
+          <span class="yc-pill">{{ typeOf(item).label }}</span>
+        </span>
+        <button
+          class="yc-row__more"
+          title="更多"
+          @click.stop="$emit('context', item, $event)"
+        >
+          <YcIcon name="more" :size="16" />
+        </button>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { filesize } from "@/utils";
 import dayjs from "dayjs";
 import { fileType } from "@/utils/yc";
@@ -96,6 +108,7 @@ const props = defineProps<{
   items: ResourceItem[];
   selected: number[];
   sorting: Sorting;
+  grouped?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -106,6 +119,24 @@ const emit = defineEmits<{
 }>();
 
 const fileStore = useFileStore();
+
+const groups = computed(() => {
+  if (!props.grouped) {
+    return [{ key: "all", label: "", items: props.items }];
+  }
+
+  const dirs = props.items.filter((item) => item.isDir);
+  const files = props.items.filter((item) => !item.isDir);
+  const result: { key: string; label: string; items: ResourceItem[] }[] = [];
+
+  if (dirs.length) {
+    result.push({ key: "dirs", label: "文件夹", items: dirs });
+  }
+  if (files.length) {
+    result.push({ key: "files", label: "文件", items: files });
+  }
+  return result;
+});
 
 const typeOf = (item: ResourceItem) => fileType(item);
 const sizeOf = (size: number) => filesize(size);
@@ -196,10 +227,33 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
   padding-left: 12px;
 }
 
+.yc-group__title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 12px;
+  background: var(--yc-surface-2);
+  border-bottom: 1px solid var(--yc-border);
+  color: var(--yc-text-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  position: sticky;
+  top: 34px;
+  z-index: 1;
+}
+.yc-group__title :deep(.yc-icon) {
+  color: var(--yc-muted);
+}
+.yc-group__count {
+  font-weight: 400;
+  color: var(--yc-muted);
+}
+
 .yc-row {
   display: flex;
   align-items: center;
-  height: 52px;
+  height: var(--yc-row-h, 52px);
   padding: 0 8px 0 8px;
   border-bottom: 1px solid var(--yc-border);
   border-radius: 0;
