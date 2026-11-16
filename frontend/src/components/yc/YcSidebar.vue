@@ -31,37 +31,42 @@
     <div v-if="isLoggedIn" class="yc-nav">
       <p class="yc-nav__caption">快速访问</p>
       <div
-        class="yc-nav__item yc-tree__root yc-nav__item--card"
+        class="yc-nav__card yc-nav__card--tree"
         :class="{ 'is-active': isRoot }"
-        role="button"
-        tabindex="0"
-        @click="go('/files')"
-        @keydown.enter="go('/files')"
       >
-        <YcIcon name="home" :size="18" />
-        <span>我的文件</span>
-        <button
-          class="yc-tree__chevron"
-          :title="rootOpen ? '收起' : '展开'"
-          @click.stop="rootOpen = !rootOpen"
+        <div
+          class="yc-nav__item yc-tree__root"
+          :class="{ 'is-active': isRoot }"
+          role="button"
+          tabindex="0"
+          @click="go('/files')"
+          @keydown.enter="go('/files')"
         >
-          <YcIcon
-            :name="rootOpen ? 'chevron-down' : 'chevron-right'"
-            :size="13"
+          <YcIcon name="home" :size="18" />
+          <span>我的文件</span>
+          <button
+            class="yc-tree__chevron"
+            :title="rootOpen ? '收起' : '展开'"
+            @click.stop="rootOpen = !rootOpen"
+          >
+            <YcIcon
+              :name="rootOpen ? 'chevron-down' : 'chevron-right'"
+              :size="13"
+            />
+          </button>
+        </div>
+        <div v-if="rootOpen" class="yc-tree__children">
+          <p v-if="volumesLoading" class="yc-nav__empty">读取存储空间…</p>
+          <p v-else-if="volumes.length === 0" class="yc-nav__empty">
+            暂无存储空间
+          </p>
+          <YcTreeNode
+            v-for="vol in volumes"
+            :key="vol.path"
+            :node="vol"
+            :depth="1"
           />
-        </button>
-      </div>
-      <div v-if="rootOpen" class="yc-tree__children">
-        <p v-if="volumesLoading" class="yc-nav__empty">读取存储空间…</p>
-        <p v-else-if="volumes.length === 0" class="yc-nav__empty">
-          暂无存储空间
-        </p>
-        <YcTreeNode
-          v-for="vol in volumes"
-          :key="vol.path"
-          :node="vol"
-          :depth="1"
-        />
+        </div>
       </div>
 
       <div class="yc-nav__card">
@@ -501,6 +506,15 @@ watch(
   margin-bottom: 6px;
   background: var(--yc-surface);
   overflow: hidden;
+}
+.yc-nav__card.is-active {
+  border-color: var(--yc-accent);
+}
+.yc-nav__card--tree .yc-tree__children {
+  padding: 2px 6px 8px 6px;
+}
+.yc-nav__card--tree :deep(.yc-tree__row.is-mount) {
+  margin: 2px 0;
 }
 .yc-nav__card .yc-nav__item {
   border-radius: 0;
