@@ -18,7 +18,6 @@
         <span class="yc-user__name">{{ username }}</span>
         <span class="yc-user__role">{{ roleText }}</span>
       </span>
-      <YcIcon name="chevron-right" :size="15" class="yc-user__arrow" />
     </button>
 
     <div v-if="!isLoggedIn" class="yc-guest">
@@ -332,7 +331,7 @@ watch(
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.yc-sidebar__close {
+.yc-sidebar .yc-sidebar__close {
   display: none;
   margin-left: auto;
 }
@@ -401,11 +400,6 @@ watch(
 .yc-user__role {
   font-size: 11px;
   color: var(--yc-muted);
-}
-.yc-user__arrow {
-  margin-left: auto;
-  color: var(--yc-muted);
-  flex: none;
 }
 
 .yc-nav {
@@ -675,7 +669,7 @@ watch(
     background: rgba(16, 24, 40, 0.32);
     z-index: 55;
   }
-  .yc-sidebar__close {
+  .yc-sidebar .yc-sidebar__close {
     display: grid;
   }
 }
