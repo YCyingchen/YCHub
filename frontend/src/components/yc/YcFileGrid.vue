@@ -184,7 +184,7 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
   overflow: hidden;
   background: var(--yc-type-doc);
   color: var(--yc-type-doc-fg);
-  margin: 4px auto 6px;
+  margin: auto auto 6px;
   flex: none;
 }
 .yc-card__icon img {
