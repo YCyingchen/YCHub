@@ -4,6 +4,7 @@ const KEY = "ychub.ui.v1";
 
 type YcViewMode = "list" | "grid";
 type YcDensity = "compact" | "cozy" | "comfortable";
+type YcIconSize = "small" | "medium" | "large";
 
 interface YcEntry {
   path: string;
@@ -17,6 +18,7 @@ interface Persisted {
   detailsOpen: boolean;
   accent: string;
   density: YcDensity;
+  iconSize: YcIconSize;
 }
 
 const DEFAULT_ACCENT = "#4f6bff";
@@ -29,6 +31,7 @@ function load(): Persisted {
     detailsOpen: true,
     accent: DEFAULT_ACCENT,
     density: "cozy",
+    iconSize: "medium",
   };
   try {
     const raw = localStorage.getItem(KEY);
@@ -44,6 +47,10 @@ function load(): Persisted {
         data.density === "compact" || data.density === "comfortable"
           ? data.density
           : "cozy",
+      iconSize:
+        data.iconSize === "small" || data.iconSize === "large"
+          ? data.iconSize
+          : "medium",
     };
   } catch {
     return fallback;
@@ -74,6 +81,7 @@ export const useYcStore = defineStore("yc", {
         detailsOpen: this.detailsOpen,
         accent: this.accent,
         density: this.density,
+        iconSize: this.iconSize,
       };
       try {
         localStorage.setItem(KEY, JSON.stringify(data));
@@ -96,6 +104,10 @@ export const useYcStore = defineStore("yc", {
     },
     setViewMode(mode: YcViewMode) {
       this.viewMode = mode;
+      this.persist();
+    },
+    setIconSize(size: YcIconSize) {
+      this.iconSize = size;
       this.persist();
     },
     toggleDetails() {

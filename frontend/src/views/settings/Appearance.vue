@@ -64,6 +64,24 @@
 
     <section class="yc-panel">
       <div class="yc-panel__head">
+        <h2>图标大小</h2>
+        <p>图标视图中卡片与缩略图的尺寸</p>
+      </div>
+      <div class="yc-segment">
+        <button
+          v-for="item in iconSizes"
+          :key="item.id"
+          class="yc-segment__btn"
+          :class="{ 'is-active': yc.iconSize === item.id }"
+          @click="yc.setIconSize(item.id)"
+        >
+          {{ item.label }}
+        </button>
+      </div>
+    </section>
+
+    <section class="yc-panel">
+      <div class="yc-panel__head">
         <h2>背景</h2>
         <p>上传一张图片作为内容区壁纸，支持 PNG / JPG / WebP</p>
       </div>
@@ -158,6 +176,11 @@ const densities = [
   { id: "compact", label: "紧凑" },
   { id: "cozy", label: "标准" },
   { id: "comfortable", label: "宽松" },
+] as const;
+const iconSizes = [
+  { id: "small", label: "小" },
+  { id: "medium", label: "中" },
+  { id: "large", label: "大" },
 ] as const;
 
 const currentTheme = ref(localStorage.getItem("ychub.theme") || "light");

@@ -1,5 +1,5 @@
 <template>
-  <div class="yc-grid" role="grid">
+  <div class="yc-grid" :class="`is-${yc.iconSize}`" role="grid">
     <div
       v-for="item in items"
       :key="item.index"
@@ -20,7 +20,7 @@
           loading="lazy"
           @error="($event.target as HTMLImageElement).style.display = 'none'"
         />
-        <YcIcon v-else :name="typeOf(item).icon" :size="26" />
+        <YcIcon v-else :name="typeOf(item).icon" :size="iconPx" />
       </span>
       <span class="yc-card__name">{{ item.name }}</span>
       <span class="yc-card__meta">
@@ -38,11 +38,13 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { filesize } from "@/utils";
 import { enableThumbs } from "@/utils/constants";
 import { files as api } from "@/api";
 import { fileType } from "@/utils/yc";
 import { useFileStore } from "@/stores/file";
+import { useYcStore } from "@/stores/yc";
 import YcIcon from "@/components/yc/YcIcon.vue";
 
 const props = defineProps<{
@@ -57,6 +59,13 @@ const emit = defineEmits<{
 }>();
 
 const fileStore = useFileStore();
+const yc = useYcStore();
+
+const iconPx = computed(() => {
+  if (yc.iconSize === "small") return 28;
+  if (yc.iconSize === "large") return 48;
+  return 36;
+});
 
 const typeOf = (item: ResourceItem) => fileType(item);
 const sizeOf = (size: number) => filesize(size);
@@ -102,10 +111,37 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 
 <style scoped>
 .yc-grid {
+  --yc-grid-icon: 76px;
+  --yc-grid-radius: 16px;
+  --yc-grid-min: 180px;
+  --yc-grid-gap: 12px;
+  --yc-grid-pad: 14px;
+  --yc-card-pad: 13px;
+  --yc-grid-name: 13px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(154px, 1fr));
-  gap: 10px;
-  padding: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(var(--yc-grid-min), 1fr));
+  gap: var(--yc-grid-gap);
+  padding: var(--yc-grid-pad);
+}
+
+.yc-grid.is-small {
+  --yc-grid-icon: 56px;
+  --yc-grid-radius: 12px;
+  --yc-grid-min: 140px;
+  --yc-grid-gap: 8px;
+  --yc-grid-pad: 12px;
+  --yc-card-pad: 10px;
+  --yc-grid-name: 12px;
+}
+
+.yc-grid.is-large {
+  --yc-grid-icon: 104px;
+  --yc-grid-radius: 22px;
+  --yc-grid-min: 220px;
+  --yc-grid-gap: 14px;
+  --yc-grid-pad: 18px;
+  --yc-card-pad: 16px;
+  --yc-grid-name: 13.5px;
 }
 
 .yc-card {
@@ -114,7 +150,7 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
-  padding: 12px;
+  padding: var(--yc-card-pad);
   border: 1px solid var(--yc-border);
   border-radius: var(--yc-radius);
   background: var(--yc-surface);
@@ -132,20 +168,22 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 }
 
 .yc-card__icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: var(--yc-grid-icon);
+  height: var(--yc-grid-icon);
+  border-radius: var(--yc-grid-radius);
   display: grid;
   place-items: center;
   overflow: hidden;
   background: var(--yc-type-doc);
   color: var(--yc-type-doc-fg);
-  margin-bottom: 2px;
+  margin-bottom: 4px;
+  flex: none;
 }
 .yc-card__icon img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 .yc-card__icon.is-folder {
   background: var(--yc-type-folder);
@@ -169,7 +207,7 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 }
 
 .yc-card__name {
-  font-size: 12.5px;
+  font-size: var(--yc-grid-name);
   color: var(--yc-text);
   width: 100%;
   white-space: nowrap;
@@ -201,5 +239,12 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 }
 .yc-card__more:hover {
   color: var(--yc-text);
+}
+
+@media (max-width: 900px) {
+  .yc-grid.is-large {
+    --yc-grid-min: 170px;
+    --yc-grid-icon: 84px;
+  }
 }
 </style>

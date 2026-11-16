@@ -52,6 +52,24 @@
       </button>
     </div>
 
+    <div
+      v-if="yc.viewMode === 'grid'"
+      class="yc-size"
+      role="group"
+      aria-label="图标大小"
+    >
+      <button
+        v-for="size in iconSizes"
+        :key="size.id"
+        class="yc-size__btn"
+        :class="{ 'is-active': yc.iconSize === size.id }"
+        :title="`${size.label}图标`"
+        @click="yc.setIconSize(size.id)"
+      >
+        {{ size.label }}
+      </button>
+    </div>
+
     <button
       class="yc-iconbtn yc-details-toggle"
       :class="{ 'is-active': yc.detailsOpen }"
@@ -107,6 +125,12 @@ const authStore = useAuthStore();
 const yc = useYcStore();
 
 const newOpen = ref(false);
+
+const iconSizes = [
+  { id: "small", label: "小" },
+  { id: "medium", label: "中" },
+  { id: "large", label: "大" },
+] as const;
 
 const crumbs = computed(() => {
   const path = route.path.replace(/^\/files\/?/, "");
@@ -294,6 +318,35 @@ const newPrompt = (name: string) => {
   box-shadow: var(--yc-shadow-sm);
 }
 
+.yc-size {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--yc-border);
+  border-radius: var(--yc-radius-sm);
+  background: var(--yc-surface-2);
+  flex: none;
+}
+.yc-size__btn {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--yc-muted);
+  font-family: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+.yc-size__btn.is-active {
+  background: var(--yc-surface);
+  color: var(--yc-accent);
+  font-weight: 600;
+  box-shadow: var(--yc-shadow-sm);
+}
+
 .yc-commandbar__upload {
   margin-left: 2px;
 }
@@ -366,6 +419,9 @@ const newPrompt = (name: string) => {
 @media (max-width: 620px) {
   .yc-segment {
     display: flex;
+  }
+  .yc-size {
+    display: none;
   }
   .yc-commandbar__upload,
   [title="刷新"] {
