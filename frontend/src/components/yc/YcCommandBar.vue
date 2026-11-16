@@ -1,5 +1,6 @@
 <template>
-  <div class="yc-commandbar">
+  <div class="yc-commandbar-wrap">
+    <div class="yc-commandbar">
     <button class="yc-iconbtn yc-commandbar__menu" @click="openSidebar">
       <YcIcon name="menu" :size="19" />
     </button>
@@ -13,18 +14,20 @@
       </button>
     </div>
 
-    <div class="yc-crumbs" role="navigation" aria-label="路径">
-      <button class="yc-crumbs__item" @click="jump(0)">我的文件</button>
-      <template v-for="(crumb, i) in crumbs" :key="i">
-        <YcIcon name="chevron-right" :size="13" class="yc-crumbs__sep" />
-        <button
-          class="yc-crumbs__item"
-          :class="{ 'is-current': i === crumbs.length - 1 }"
-          @click="jump(i + 1)"
-        >
-          {{ crumb }}
-        </button>
-      </template>
+    <div class="yc-crumbs-box">
+      <div class="yc-crumbs" role="navigation" aria-label="路径">
+        <button class="yc-crumbs__item" @click="jump(0)">我的文件</button>
+        <template v-for="(crumb, i) in crumbs" :key="i">
+          <YcIcon name="chevron-right" :size="13" class="yc-crumbs__sep" />
+          <button
+            class="yc-crumbs__item"
+            :class="{ 'is-current': i === crumbs.length - 1 }"
+            @click="jump(i + 1)"
+          >
+            {{ crumb }}
+          </button>
+        </template>
+      </div>
     </div>
 
     <button class="yc-search" @click="openSearch">
@@ -181,6 +184,76 @@
         </div>
       </div>
     </template>
+    </div>
+
+    <div class="yc-toolbar">
+      <button
+        class="yc-toolbar__btn"
+        :disabled="!canOpen"
+        @click="openSelected"
+      >
+        <YcIcon name="arrow-right" :size="15" />
+        打开
+      </button>
+      <button
+        class="yc-toolbar__btn"
+        :disabled="!canDownload"
+        @click="showPrompt('download')"
+      >
+        <YcIcon name="download" :size="15" />
+        下载
+      </button>
+      <button
+        class="yc-toolbar__btn"
+        :disabled="!canShare"
+        @click="showPrompt('share')"
+      >
+        <YcIcon name="link" :size="15" />
+        分享
+      </button>
+      <span class="yc-toolbar__sep" />
+      <button
+        class="yc-toolbar__btn"
+        :disabled="!canRename"
+        @click="showPrompt('rename')"
+      >
+        <YcIcon name="edit" :size="15" />
+        重命名
+      </button>
+      <button
+        class="yc-toolbar__btn"
+        :disabled="!canCopy"
+        @click="showPrompt('copy')"
+      >
+        <YcIcon name="file" :size="15" />
+        复制到
+      </button>
+      <button
+        class="yc-toolbar__btn"
+        :disabled="!canMove"
+        @click="showPrompt('move')"
+      >
+        <YcIcon name="transfer" :size="15" />
+        移动到
+      </button>
+      <span class="yc-toolbar__sep" />
+      <button
+        class="yc-toolbar__btn"
+        :disabled="!canDelete"
+        @click="showPrompt('delete')"
+      >
+        <YcIcon name="trash" :size="15" />
+        删除
+      </button>
+      <button class="yc-toolbar__btn" @click="showPrompt('info')">
+        <YcIcon name="info" :size="15" />
+        信息
+      </button>
+      <span class="yc-toolbar__spacer" />
+      <span v-if="selCount" class="yc-toolbar__count"
+        >已选 {{ selCount }} 项</span
+      >
+    </div>
   </div>
 </template>
 
@@ -220,6 +293,42 @@ const sizeLabel = computed(
 const showHidden = computed(
   () => authStore.user !== null && authStore.user.hideDotfiles === false
 );
+
+const selCount = computed(() => fileStore.selectedCount);
+const selectedItem = computed(() => {
+  const current = fileStore.req;
+  if (!current || fileStore.selected.length !== 1) return null;
+  return current.items[fileStore.selected[0]] ?? null;
+});
+
+const canOpen = computed(() => selectedItem.value !== null);
+const canDownload = computed(
+  () => authStore.user?.perm.download === true && selCount.value > 0
+);
+const canShare = computed(
+  () =>
+    authStore.user?.perm.share === true &&
+    authStore.user?.perm.download === true &&
+    selCount.value === 1
+);
+const canRename = computed(
+  () => authStore.user?.perm.rename === true && selCount.value === 1
+);
+const canCopy = computed(
+  () => authStore.user?.perm.create === true && selCount.value > 0
+);
+const canMove = computed(
+  () => authStore.user?.perm.rename === true && selCount.value > 0
+);
+const canDelete = computed(
+  () => authStore.user?.perm.delete === true && selCount.value > 0
+);
+
+const openSelected = () => {
+  if (selectedItem.value) router.push(selectedItem.value.url);
+};
+
+const showPrompt = (name: string) => layoutStore.showHover(name);
 
 const setView = (mode: "list" | "grid") => {
   yc.setViewMode(mode);
@@ -326,6 +435,69 @@ const newPrompt = (name: string) => {
 </script>
 
 <style scoped>
+.yc-commandbar-wrap {
+  flex: none;
+}
+
+.yc-crumbs-box {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 6px;
+  border: 1px solid var(--yc-border);
+  border-radius: var(--yc-radius-sm);
+  background: var(--yc-surface-2);
+}
+
+.yc-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 44px;
+  padding: 0 16px;
+  background: var(--yc-surface);
+  border-bottom: 1px solid var(--yc-border);
+}
+.yc-toolbar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--yc-text-2);
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.yc-toolbar__btn:hover:not(:disabled) {
+  background: var(--yc-accent-soft);
+  color: var(--yc-accent);
+}
+.yc-toolbar__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.yc-toolbar__sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 6px;
+  background: var(--yc-border);
+  flex: none;
+}
+.yc-toolbar__spacer {
+  flex: 1;
+}
+.yc-toolbar__count {
+  font-size: 11.5px;
+  color: var(--yc-muted);
+}
+
 .yc-commandbar {
   display: flex;
   align-items: center;
@@ -624,15 +796,21 @@ const newPrompt = (name: string) => {
     width: auto;
     padding: 0 4px;
   }
-  .yc-crumbs {
+  .yc-crumbs-box {
     order: 10;
     flex: 0 0 100%;
+    width: 100%;
+  }
+  .yc-crumbs {
     width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
     padding-bottom: 2px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+  }
+  .yc-toolbar {
+    display: none;
   }
   .yc-crumbs::-webkit-scrollbar {
     display: none;
