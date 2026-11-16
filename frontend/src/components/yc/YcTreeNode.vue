@@ -272,7 +272,7 @@ const openPath = () => {
   flex: none;
 }
 .yc-tree__chevron:hover {
-  background: var(--yc-surface);
+  background: transparent;
   color: var(--yc-text);
 }
 

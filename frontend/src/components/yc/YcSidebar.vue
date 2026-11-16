@@ -560,7 +560,7 @@ watch(
   margin-left: auto;
 }
 .yc-tree__chevron:hover {
-  background: var(--yc-surface);
+  background: transparent;
   color: var(--yc-text);
 }
 .yc-tree__children {
