@@ -507,7 +507,12 @@ watch(
   margin-bottom: 0;
 }
 .yc-nav__card .yc-nav__sub {
-  padding: 0 6px 6px 24px;
+  padding: 4px 6px 12px 24px;
+  min-height: 42px;
+}
+.yc-nav__card .yc-nav__empty {
+  margin: 8px 8px 4px;
+  line-height: 1.7;
 }
 
 .yc-nav__sub {
