@@ -12,13 +12,13 @@
       </template>
     </div>
     <div class="yc-statusbar__right">
+      <span v-if="yc.filterKind !== 'all'" class="yc-statusbar__filter">
+        筛选：{{ filterLabel }}
+      </span>
       <span v-if="totalSize">共 {{ totalSize }}</span>
       <span class="yc-statusbar__view">
-        <YcIcon
-          :name="viewMode === 'grid' ? 'grid' : 'list'"
-          :size="13"
-        />
-        {{ viewMode === "grid" ? "图标" : "列表" }}
+        <YcIcon :name="viewModeMeta.icon" :size="13" />
+        {{ viewModeMeta.label }}
       </span>
     </div>
   </footer>
@@ -30,6 +30,7 @@ import { storeToRefs } from "pinia";
 import { useFileStore } from "@/stores/file";
 import { useYcStore } from "@/stores/yc";
 import { filesize } from "@/utils";
+import { filterOptions } from "@/utils/yc";
 import YcIcon from "@/components/yc/YcIcon.vue";
 
 const fileStore = useFileStore();
@@ -41,6 +42,18 @@ const files = computed(() => req.value?.numFiles ?? 0);
 const total = computed(() => dirs.value + files.value);
 const selected = computed(() => fileStore.selectedCount);
 const viewMode = computed(() => yc.viewMode);
+const viewModeMeta = computed(
+  () =>
+    ({
+      list: { icon: "list", label: "列表" },
+      grid: { icon: "grid", label: "图标" },
+      dual: { icon: "columns", label: "双栏" },
+      columns: { icon: "list", label: "分栏" },
+    })[viewMode.value] ?? { icon: "list", label: "列表" }
+);
+const filterLabel = computed(
+  () => filterOptions.find((option) => option.id === yc.filterKind)?.label ?? ""
+);
 const totalSize = computed(() => {
   if (!req.value) return "";
   const bytes = req.value.items
@@ -78,6 +91,9 @@ const totalSize = computed(() => {
 }
 .yc-statusbar__right {
   gap: 14px;
+}
+.yc-statusbar__filter {
+  color: var(--yc-accent);
 }
 .yc-statusbar__view {
   display: inline-flex;

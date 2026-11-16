@@ -2,9 +2,17 @@ import { defineStore } from "pinia";
 
 const KEY = "ychub.ui.v1";
 
-type YcViewMode = "list" | "grid";
+type YcViewMode = "list" | "grid" | "dual" | "columns";
 type YcDensity = "compact" | "cozy" | "comfortable";
 type YcIconSize = "small" | "medium" | "large";
+type YcFilterKind =
+  | "all"
+  | "folder"
+  | "image"
+  | "video"
+  | "audio"
+  | "doc"
+  | "archive";
 
 interface YcEntry {
   path: string;
@@ -20,6 +28,8 @@ interface Persisted {
   density: YcDensity;
   iconSize: YcIconSize;
   grouped: boolean;
+  filterKind: YcFilterKind;
+  orders: Record<string, string[]>;
 }
 
 const DEFAULT_ACCENT = "#4f6bff";
@@ -34,6 +44,8 @@ function load(): Persisted {
     density: "cozy",
     iconSize: "medium",
     grouped: true,
+    filterKind: "all",
+    orders: {},
   };
   try {
     const raw = localStorage.getItem(KEY);
@@ -54,6 +66,9 @@ function load(): Persisted {
           ? data.iconSize
           : "medium",
       grouped: data.grouped !== false,
+      filterKind: data.filterKind ?? "all",
+      orders:
+        data.orders && typeof data.orders === "object" ? data.orders : {},
     };
   } catch {
     return fallback;
@@ -86,6 +101,8 @@ export const useYcStore = defineStore("yc", {
         density: this.density,
         iconSize: this.iconSize,
         grouped: this.grouped,
+        filterKind: this.filterKind,
+        orders: this.orders,
       };
       try {
         localStorage.setItem(KEY, JSON.stringify(data));
@@ -120,6 +137,20 @@ export const useYcStore = defineStore("yc", {
     },
     toggleGrouped() {
       this.grouped = !this.grouped;
+      this.persist();
+    },
+    setFilterKind(kind: YcFilterKind) {
+      this.filterKind = kind;
+      this.persist();
+    },
+    setOrder(path: string, names: string[]) {
+      this.orders = { ...this.orders, [path]: names };
+      this.persist();
+    },
+    clearOrder(path: string) {
+      const next = { ...this.orders };
+      delete next[path];
+      this.orders = next;
       this.persist();
     },
     toggleDetails() {

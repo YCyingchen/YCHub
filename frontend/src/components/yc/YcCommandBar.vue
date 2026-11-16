@@ -76,7 +76,13 @@
       @click="toggleViewMenu"
     >
       <YcIcon
-        :name="yc.viewMode === 'grid' ? 'grid' : 'list'"
+        :name="
+          yc.viewMode === 'grid'
+            ? 'grid'
+            : yc.viewMode === 'list'
+              ? 'list'
+              : 'columns'
+        "
         :size="18"
       />
       <YcIcon name="chevron-down" :size="11" class="yc-view__caret" />
@@ -127,9 +133,17 @@
       >
         <YcIcon :name="yc.viewMode === 'grid' ? 'grid' : 'list'" :size="16" />
         视图
-        <span class="yc-toolbar__value">{{
-          yc.viewMode === 'grid' ? '图标' : '列表'
-        }}</span>
+        <span class="yc-toolbar__value">{{ viewModeLabel }}</span>
+        <YcIcon name="chevron-down" :size="12" />
+      </button>
+      <button
+        class="yc-toolbar__btn yc-filter-trigger"
+        :class="{ 'is-active': filterOpen || yc.filterKind !== 'all' }"
+        @click="toggleFilterMenu"
+      >
+        <YcIcon name="filter" :size="16" />
+        筛选
+        <span class="yc-toolbar__value">{{ filterLabel }}</span>
         <YcIcon name="chevron-down" :size="12" />
       </button>
       <span class="yc-toolbar__sep" />
@@ -219,9 +233,9 @@
         </button>
       </template>
       <span class="yc-toolbar__sep" />
-      <button class="yc-toolbar__btn" @click="selectAll">
-        <YcIcon name="check" :size="15" />
-        全选
+      <button class="yc-toolbar__btn" @click="toggleSelectAll">
+        <YcIcon :name="allSelected ? 'x' : 'check'" :size="15" />
+        {{ allSelected ? "取消全选" : "全选" }}
       </button>
       <span class="yc-toolbar__spacer" />
       <span v-if="selCount" class="yc-toolbar__count"
@@ -260,6 +274,34 @@
           <span>图标</span>
           <YcIcon
             v-if="yc.viewMode === 'grid'"
+            name="check"
+            :size="14"
+            class="yc-view__check"
+          />
+        </button>
+        <button
+          class="yc-view__item"
+          :class="{ 'is-active': yc.viewMode === 'dual' }"
+          @click="setView('dual')"
+        >
+          <YcIcon name="columns" :size="16" />
+          <span>双栏</span>
+          <YcIcon
+            v-if="yc.viewMode === 'dual'"
+            name="check"
+            :size="14"
+            class="yc-view__check"
+          />
+        </button>
+        <button
+          class="yc-view__item"
+          :class="{ 'is-active': yc.viewMode === 'columns' }"
+          @click="setView('columns')"
+        >
+          <YcIcon name="list" :size="16" />
+          <span>分栏</span>
+          <YcIcon
+            v-if="yc.viewMode === 'columns'"
             name="check"
             :size="14"
             class="yc-view__check"
@@ -333,6 +375,32 @@
         </button>
       </div>
     </Teleport>
+
+    <Teleport to="body">
+      <div
+        v-if="filterOpen"
+        ref="filterMenuRef"
+        class="yc-view__menu yc-view__menu--fixed"
+        :style="filterStyle"
+      >
+        <p class="yc-view__caption">筛选类型</p>
+        <button
+          v-for="option in filterOptions"
+          :key="option.id"
+          class="yc-view__item"
+          :class="{ 'is-active': yc.filterKind === option.id }"
+          @click="chooseFilter(option.id)"
+        >
+          <span>{{ option.label }}</span>
+          <YcIcon
+            v-if="yc.filterKind === option.id"
+            name="check"
+            :size="14"
+            class="yc-view__check"
+          />
+        </button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -351,6 +419,7 @@ import { useLayoutStore } from "@/stores/layout";
 import { useAuthStore } from "@/stores/auth";
 import { useYcStore } from "@/stores/yc";
 import { users } from "@/api";
+import { filterOptions, type YcFilterKind } from "@/utils/yc";
 import YcIcon from "@/components/yc/YcIcon.vue";
 
 const router = useRouter();
@@ -366,6 +435,42 @@ const viewOpen = ref(false);
 const sizeOpen = ref(false);
 const viewMenuRef = ref<HTMLElement | null>(null);
 const menuStyle = ref<Record<string, string>>({});
+const filterOpen = ref(false);
+const filterMenuRef = ref<HTMLElement | null>(null);
+const filterStyle = ref<Record<string, string>>({});
+
+const filterLabel = computed(
+  () => filterOptions.find((option) => option.id === yc.filterKind)?.label ?? "全部"
+);
+
+const toggleFilterMenu = (event: MouseEvent) => {
+  if (filterOpen.value) {
+    filterOpen.value = false;
+    return;
+  }
+
+  const trigger = event.currentTarget as HTMLElement | null;
+  if (!trigger) return;
+
+  const rect = trigger.getBoundingClientRect();
+  const width = 180;
+  const left = Math.max(
+    8,
+    Math.min(rect.right - width, window.innerWidth - width - 8)
+  );
+  filterStyle.value = {
+    top: `${rect.bottom + 6}px`,
+    left: `${left}px`,
+  };
+  filterOpen.value = true;
+  viewOpen.value = false;
+  sizeOpen.value = false;
+};
+
+const chooseFilter = (kind: YcFilterKind) => {
+  yc.setFilterKind(kind);
+  filterOpen.value = false;
+};
 
 const toggleViewMenu = (event: MouseEvent) => {
   if (viewOpen.value) {
@@ -389,6 +494,7 @@ const toggleViewMenu = (event: MouseEvent) => {
   };
   viewOpen.value = true;
   sizeOpen.value = false;
+  filterOpen.value = false;
 };
 
 const iconSizes = [
@@ -399,6 +505,16 @@ const iconSizes = [
 
 const sizeLabel = computed(
   () => iconSizes.find((size) => size.id === yc.iconSize)?.label ?? "中"
+);
+
+const viewModeLabel = computed(
+  () =>
+    ({
+      list: "列表",
+      grid: "图标",
+      dual: "双栏",
+      columns: "分栏",
+    })[yc.viewMode] ?? "列表"
 );
 
 const showHidden = computed(
@@ -479,12 +595,24 @@ const submitPath = () => {
   router.push("/files" + (target === "/" ? "/" : target));
 };
 
-const selectAll = () => {
+const allSelected = computed(() => {
   const req = fileStore.req;
-  if (req) fileStore.selected = req.items.map((item) => item.index);
+  return (
+    !!req &&
+    req.items.length > 0 &&
+    fileStore.selected.length === req.items.length
+  );
+});
+
+const toggleSelectAll = () => {
+  const req = fileStore.req;
+  if (!req) return;
+  fileStore.selected = allSelected.value
+    ? []
+    : req.items.map((item) => item.index);
 };
 
-const setView = (mode: "list" | "grid") => {
+const setView = (mode: "list" | "grid" | "dual" | "columns") => {
   yc.setViewMode(mode);
   viewOpen.value = false;
   sizeOpen.value = false;
@@ -519,11 +647,13 @@ const toggleHidden = async () => {
 };
 
 const onDocClick = (event: MouseEvent) => {
-  if (!viewOpen.value) return;
+  if (!viewOpen.value && !filterOpen.value) return;
   const target = event.target as HTMLElement | null;
-  if (target?.closest(".yc-view__menu, .yc-view-trigger")) return;
+  if (target?.closest(".yc-view__menu, .yc-view-trigger, .yc-filter-trigger"))
+    return;
   viewOpen.value = false;
   sizeOpen.value = false;
+  filterOpen.value = false;
 };
 
 const onEsc = (event: KeyboardEvent) => {

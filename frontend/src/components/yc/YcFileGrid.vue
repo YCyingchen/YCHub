@@ -16,8 +16,13 @@
           :key="item.index"
           class="yc-card"
           :class="{ 'is-selected': selected.includes(item.index) }"
+          :data-index="item.index"
+          draggable="true"
           role="gridcell"
           tabindex="0"
+          @dragstart="onDragStart(item, $event)"
+          @dragover.prevent
+          @drop="onDrop(item, $event)"
           @click="onClick(item, $event)"
           @dblclick="$emit('open', item)"
           @keydown.enter="$emit('open', item)"
@@ -78,6 +83,7 @@ const emit = defineEmits<{
   (e: "open", item: ResourceItem): void;
   (e: "select", index: number, event: MouseEvent): void;
   (e: "context", item: ResourceItem, event: MouseEvent): void;
+  (e: "reorder", fromName: string, toName: string): void;
 }>();
 
 const fileStore = useFileStore();
@@ -155,6 +161,17 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
     fileStore.selected = [item.index];
   }
   emit("context", item, event);
+};
+
+const onDragStart = (item: ResourceItem, event: DragEvent) => {
+  if (!event.dataTransfer) return;
+  event.dataTransfer.setData("text/yc-reorder", item.name);
+  event.dataTransfer.effectAllowed = "move";
+};
+
+const onDrop = (item: ResourceItem, event: DragEvent) => {
+  const from = event.dataTransfer?.getData("text/yc-reorder");
+  if (from && from !== item.name) emit("reorder", from, item.name);
 };
 </script>
 

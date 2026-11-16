@@ -7,6 +7,7 @@
         class="yc-files__listing"
         @click="onListingClick"
         @contextmenu.prevent="onListingContext"
+        @pointerdown="onPointerDown"
       >
         <div v-if="layoutStore.loading" class="yc-state">
           <span class="yc-spinner" />
@@ -30,6 +31,21 @@
           </button>
         </div>
 
+        <div v-else-if="filterEmpty" class="yc-state">
+          <span class="yc-state__icon">
+            <YcIcon name="filter" :size="34" />
+          </span>
+          <p>没有匹配的项目</p>
+          <small>换个筛选类型，或显示全部项目</small>
+          <button
+            class="yc-btn yc-btn--primary yc-state__btn"
+            @click="yc.setFilterKind('all')"
+          >
+            <YcIcon name="x" :size="15" />
+            清除筛选
+          </button>
+        </div>
+
         <template v-else>
           <YcFileList
             v-if="yc.viewMode === 'list'"
@@ -40,16 +56,40 @@
             @open="open"
             @context="openMenu"
             @sort="sort"
+            @reorder="onReorder"
           />
           <YcFileGrid
-            v-else
+            v-else-if="yc.viewMode === 'grid'"
             :items="items"
             :selected="fileStore.selected"
             :grouped="yc.grouped"
             @open="open"
             @context="openMenu"
+            @reorder="onReorder"
           />
+          <div v-else-if="yc.viewMode === 'dual'" class="yc-dual">
+            <div class="yc-dual__pane">
+              <YcFileList
+                :items="items"
+                :selected="fileStore.selected"
+                :sorting="sorting"
+                :grouped="yc.grouped"
+                @open="open"
+                @context="openMenu"
+                @sort="sort"
+                @reorder="onReorder"
+              />
+            </div>
+            <div class="yc-dual__pane">
+              <YcPane path="/" />
+            </div>
+          </div>
+          <div v-else class="yc-columns">
+            <YcPane v-for="path in columnPaths" :key="path" :path="path" />
+          </div>
         </template>
+
+        <div v-if="band.visible" class="yc-band" :style="bandStyle" />
       </section>
 
       <YcDetails v-if="yc.detailsOpen" />
@@ -157,7 +197,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, watch } from "vue";
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import { useFileStore } from "@/stores/file";
@@ -170,8 +217,10 @@ import YcFileList from "@/components/yc/YcFileList.vue";
 import YcFileGrid from "@/components/yc/YcFileGrid.vue";
 import YcDetails from "@/components/yc/YcDetails.vue";
 import YcSearch from "@/components/yc/YcSearch.vue";
+import YcPane from "@/components/yc/YcPane.vue";
 import YcStatusBar from "@/components/yc/YcStatusBar.vue";
 import YcIcon from "@/components/yc/YcIcon.vue";
+import { matchesFilter } from "@/utils/yc";
 
 const route = useRoute();
 const router = useRouter();
@@ -188,12 +237,57 @@ const menu = reactive<{
   item: ResourceItem | null;
 }>({ open: false, x: 0, y: 0, item: null });
 
+const visibleItems = computed<ResourceItem[]>(() =>
+  (req.value?.items ?? []).filter((item) =>
+    matchesFilter(item, yc.filterKind)
+  )
+);
+
+const orderedItems = computed<ResourceItem[]>(() => {
+  const all = visibleItems.value;
+  const order = yc.orders[route.path] ?? [];
+  if (!order.length) return all;
+
+  const byName = new Map(all.map((item) => [item.name, item]));
+  const used = new Set<string>();
+  const result: ResourceItem[] = [];
+
+  for (const name of order) {
+    const item = byName.get(name);
+    if (item) {
+      result.push(item);
+      used.add(name);
+    }
+  }
+  for (const item of all) {
+    if (!used.has(item.name)) result.push(item);
+  }
+  return result;
+});
+
 const items = computed<ResourceItem[]>(() => {
-  const all = req.value?.items ?? [];
+  const all = orderedItems.value;
   const dirs = all.filter((i) => i.isDir);
   const files = all.filter((i) => !i.isDir);
   return [...dirs, ...files];
 });
+
+const onReorder = (fromName: string, toName: string) => {
+  const from = items.value.find((item) => item.name === fromName);
+  const to = items.value.find((item) => item.name === toName);
+  if (!from || !to) return;
+  if (yc.grouped && from.isDir !== to.isDir) return;
+
+  const names = items.value.map((item) => item.name);
+  const fromIndex = names.indexOf(fromName);
+  const toIndex = names.indexOf(toName);
+  if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
+
+  const next = [...names];
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, moved);
+  yc.setOrder(route.path, next);
+};
 
 const sorting = computed<Sorting>(
   () => req.value?.sorting ?? { by: "name", asc: true }
@@ -203,6 +297,26 @@ const empty = computed(
     !layoutStore.loading &&
     (req.value?.numDirs ?? 0) + (req.value?.numFiles ?? 0) === 0
 );
+const filterEmpty = computed(
+  () =>
+    !layoutStore.loading &&
+    (req.value?.numDirs ?? 0) + (req.value?.numFiles ?? 0) > 0 &&
+    visibleItems.value.length === 0
+);
+
+const columnPaths = computed(() => {
+  const segments = route.path
+    .replace(/^\/files\/?/, "")
+    .split("/")
+    .filter(Boolean);
+  const paths = ["/"];
+  let current = "";
+  for (const segment of segments) {
+    current += "/" + segment;
+    paths.push(current);
+  }
+  return paths;
+});
 
 const canCreate = computed(() => authStore.user?.perm?.create === true);
 const canDownload = computed(() => authStore.user?.perm?.download === true);
@@ -246,12 +360,96 @@ const isItemTarget = (event: Event) => {
 };
 
 const onListingClick = (event: MouseEvent) => {
+  if (suppressClick) {
+    suppressClick = false;
+    return;
+  }
   if (!isItemTarget(event)) clearSelection();
 };
 
 const onListingContext = (event: MouseEvent) => {
   if (isItemTarget(event)) return;
   openBlankMenu(event);
+};
+
+const band = reactive({
+  visible: false,
+  startX: 0,
+  startY: 0,
+  x: 0,
+  y: 0,
+  w: 0,
+  h: 0,
+});
+let bandMoved = false;
+let suppressClick = false;
+
+const bandStyle = computed(() => ({
+  left: `${band.x}px`,
+  top: `${band.y}px`,
+  width: `${band.w}px`,
+  height: `${band.h}px`,
+}));
+
+const onPointerMove = (event: PointerEvent) => {
+  const dx = event.clientX - band.startX;
+  const dy = event.clientY - band.startY;
+
+  if (!bandMoved && Math.hypot(dx, dy) < 4) return;
+  bandMoved = true;
+  band.visible = true;
+  band.x = Math.min(event.clientX, band.startX);
+  band.y = Math.min(event.clientY, band.startY);
+  band.w = Math.abs(dx);
+  band.h = Math.abs(dy);
+
+  const selected: number[] = [];
+  document
+    .querySelectorAll<HTMLElement>(".yc-files__listing [data-index]")
+    .forEach((element) => {
+      const rect = element.getBoundingClientRect();
+      const intersects =
+        rect.right > band.x &&
+        rect.left < band.x + band.w &&
+        rect.bottom > band.y &&
+        rect.top < band.y + band.h;
+      if (!intersects) return;
+      const index = Number(element.dataset.index);
+      if (!Number.isNaN(index)) selected.push(index);
+    });
+
+  fileStore.selected = selected;
+};
+
+const onPointerUp = () => {
+  window.removeEventListener("pointermove", onPointerMove);
+  band.visible = false;
+  if (bandMoved) suppressClick = true;
+};
+
+const onPointerDown = (event: PointerEvent) => {
+  if (event.button !== 0 || window.innerWidth <= 900) return;
+
+  const target = event.target as HTMLElement | null;
+  if (
+    target?.closest(
+      ".yc-card, .yc-row, button, a, input, .yc-group__title, .yc-menu"
+    )
+  ) {
+    return;
+  }
+
+  bandMoved = false;
+  band.visible = false;
+  band.startX = event.clientX;
+  band.startY = event.clientY;
+  band.x = event.clientX;
+  band.y = event.clientY;
+  band.w = 0;
+  band.h = 0;
+
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup", onPointerUp, { once: true });
 };
 
 const open = (item: ResourceItem) => {
@@ -392,6 +590,7 @@ onBeforeUnmount(() => {
   document.body.classList.remove("yc-files-mode");
   window.removeEventListener("keydown", onKeydown);
   window.removeEventListener("click", onGlobalClick, true);
+  window.removeEventListener("pointermove", onPointerMove);
 });
 
 watch(req, (value) => {
@@ -529,6 +728,41 @@ watch(
   height: 1px;
   margin: 5px 6px;
   background: var(--yc-border);
+}
+
+.yc-band {
+  position: fixed;
+  z-index: 900;
+  border: 1px solid var(--yc-accent);
+  background: rgba(79, 107, 255, 0.12);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.yc-dual {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+.yc-dual__pane {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+.yc-dual__pane + .yc-dual__pane {
+  border-left: 1px solid var(--yc-border);
+}
+
+.yc-columns {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  overflow-x: auto;
+}
+.yc-columns :deep(.yc-pane) {
+  width: 280px;
+  flex: none;
+  border-right: 1px solid var(--yc-border);
 }
 
 @media (max-width: 900px) {

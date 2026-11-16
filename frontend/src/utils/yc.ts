@@ -127,3 +127,34 @@ export function displayPath(path?: string): string {
   p = p.replace(/^\/files/, "");
   return p || "/";
 }
+
+export type YcFilterKind =
+  | "all"
+  | "folder"
+  | "image"
+  | "video"
+  | "audio"
+  | "doc"
+  | "archive";
+
+export const filterOptions: { id: YcFilterKind; label: string }[] = [
+  { id: "all", label: "全部" },
+  { id: "folder", label: "文件夹" },
+  { id: "image", label: "图片" },
+  { id: "video", label: "视频" },
+  { id: "audio", label: "音频" },
+  { id: "doc", label: "文档" },
+  { id: "archive", label: "压缩包" },
+];
+
+export function matchesFilter(
+  item: { isDir?: boolean; type?: string; extension?: string; name?: string },
+  kind: YcFilterKind
+): boolean {
+  if (kind === "all") return true;
+  const t = fileType(item).kind;
+  if (kind === "folder") return t === "folder";
+  if (kind === "doc") return t === "doc" || t === "pdf";
+  if (kind === "archive") return t === "zip";
+  return t === kind;
+}
