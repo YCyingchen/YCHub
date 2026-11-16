@@ -203,6 +203,7 @@ const openPath = () => {
 
 /* 存储空间：整块外框，名称、百分比与容量信息一起高亮 */
 .yc-tree__row.is-mount {
+  position: relative;
   flex-direction: column;
   align-items: stretch;
   height: auto;
@@ -215,6 +216,14 @@ const openPath = () => {
 }
 .yc-tree__row.is-mount .yc-tree__main {
   flex: none;
+  padding-right: 24px;
+}
+.yc-tree__row.is-mount .yc-tree__chevron {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  margin: 0;
+  transform: translateY(-50%);
 }
 .yc-tree__row.is-mount:hover {
   background: var(--yc-surface-2);
