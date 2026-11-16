@@ -14,8 +14,13 @@
       </button>
     </div>
 
-    <div class="yc-crumbs-box">
-      <div class="yc-crumbs" role="navigation" aria-label="路径">
+    <div class="yc-crumbs-box" :class="{ 'is-editing': editingPath }">
+      <div
+        v-if="!editingPath"
+        class="yc-crumbs"
+        role="navigation"
+        aria-label="路径"
+      >
         <button class="yc-crumbs__item" @click="jump(0)">我的文件</button>
         <template v-for="(crumb, i) in crumbs" :key="i">
           <YcIcon name="chevron-right" :size="13" class="yc-crumbs__sep" />
@@ -28,6 +33,34 @@
           </button>
         </template>
       </div>
+      <input
+        v-else
+        ref="pathInput"
+        v-model="pathDraft"
+        class="yc-path-input"
+        type="text"
+        spellcheck="false"
+        placeholder="输入路径后回车，例如 /vol1/1000"
+        @keydown.enter.prevent="submitPath"
+        @keydown.esc.prevent="cancelPath"
+      />
+      <button
+        v-if="!editingPath"
+        class="yc-path-edit"
+        title="输入路径"
+        @click.stop="startEditPath"
+      >
+        <YcIcon name="edit" :size="15" />
+      </button>
+      <button
+        v-else
+        class="yc-path-edit"
+        title="取消"
+        @mousedown.prevent
+        @click="cancelPath"
+      >
+        <YcIcon name="x" :size="15" />
+      </button>
     </div>
 
     <button class="yc-search" @click="openSearch">
@@ -36,7 +69,7 @@
       <kbd>Ctrl K</kbd>
     </button>
 
-    <div ref="viewRef" class="yc-view">
+    <div ref="viewRef" class="yc-view yc-top-collapsible">
       <button
         class="yc-iconbtn yc-view__trigger"
         :class="{ 'is-active': viewOpen }"
@@ -150,7 +183,7 @@
     </div>
 
     <button
-      class="yc-iconbtn yc-details-toggle"
+      class="yc-iconbtn yc-details-toggle yc-top-collapsible"
       :class="{ 'is-active': yc.detailsOpen }"
       title="详情面板"
       @click="yc.toggleDetails()"
@@ -159,7 +192,7 @@
     </button>
 
     <template v-if="canCreate">
-      <button class="yc-iconbtn" title="刷新" @click="refresh">
+      <button class="yc-iconbtn yc-top-collapsible" title="刷新" @click="refresh">
         <YcIcon name="refresh" :size="17" />
       </button>
       <button class="yc-btn yc-commandbar__upload" @click="upload">
@@ -187,6 +220,55 @@
     </div>
 
     <div class="yc-toolbar">
+      <button
+        class="yc-toolbar__icon"
+        :class="{ 'is-active': yc.viewMode === 'list' }"
+        title="列表视图"
+        @click="yc.setViewMode('list')"
+      >
+        <YcIcon name="list" :size="17" />
+      </button>
+      <button
+        class="yc-toolbar__icon"
+        :class="{ 'is-active': yc.viewMode === 'grid' }"
+        title="图标视图"
+        @click="yc.setViewMode('grid')"
+      >
+        <YcIcon name="grid" :size="16" />
+      </button>
+      <div class="yc-toolbar__sizes">
+        <button
+          v-for="size in iconSizes"
+          :key="size.id"
+          class="yc-toolbar__size"
+          :class="{ 'is-active': yc.iconSize === size.id }"
+          :title="`${size.label}图标`"
+          @click="yc.setIconSize(size.id)"
+        >
+          {{ size.label }}
+        </button>
+      </div>
+      <button
+        class="yc-toolbar__icon"
+        :class="{ 'is-active': yc.grouped }"
+        title="分组显示"
+        @click="yc.toggleGrouped()"
+      >
+        <YcIcon name="folder" :size="17" />
+      </button>
+      <span class="yc-toolbar__sep" />
+      <button
+        class="yc-toolbar__icon"
+        :class="{ 'is-active': yc.detailsOpen }"
+        title="详情面板"
+        @click="yc.toggleDetails()"
+      >
+        <YcIcon name="columns" :size="17" />
+      </button>
+      <button class="yc-toolbar__icon" title="刷新" @click="refresh">
+        <YcIcon name="refresh" :size="17" />
+      </button>
+      <span class="yc-toolbar__sep" />
       <button
         class="yc-toolbar__btn"
         :disabled="!canOpen"
@@ -249,6 +331,22 @@
         <YcIcon name="info" :size="15" />
         信息
       </button>
+      <template v-if="canCreate">
+        <span class="yc-toolbar__sep" />
+        <button class="yc-toolbar__btn" @click="showPrompt('newDir')">
+          <YcIcon name="folder-plus" :size="15" />
+          新建文件夹
+        </button>
+        <button class="yc-toolbar__btn" @click="showPrompt('newFile')">
+          <YcIcon name="file-plus" :size="15" />
+          新建文件
+        </button>
+      </template>
+      <span class="yc-toolbar__sep" />
+      <button class="yc-toolbar__btn" @click="selectAll">
+        <YcIcon name="check" :size="15" />
+        全选
+      </button>
       <span class="yc-toolbar__spacer" />
       <span v-if="selCount" class="yc-toolbar__count"
         >已选 {{ selCount }} 项</span
@@ -258,7 +356,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onBeforeUnmount, onMounted, ref } from "vue";
+import {
+  computed,
+  inject,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+} from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useFileStore } from "@/stores/file";
 import { useLayoutStore } from "@/stores/layout";
@@ -329,6 +434,49 @@ const openSelected = () => {
 };
 
 const showPrompt = (name: string) => layoutStore.showHover(name);
+
+const editingPath = ref(false);
+const pathDraft = ref("");
+const pathInput = ref<HTMLInputElement | null>(null);
+
+const currentPath = computed(() => {
+  const raw = route.path.replace(/^\/files\/?/, "").replace(/\/+$/, "");
+  if (!raw) return "/";
+  try {
+    return "/" + decodeURIComponent(raw);
+  } catch {
+    return "/" + raw;
+  }
+});
+
+const startEditPath = () => {
+  pathDraft.value = currentPath.value;
+  editingPath.value = true;
+  nextTick(() => {
+    pathInput.value?.focus();
+    pathInput.value?.select();
+  });
+};
+
+const cancelPath = () => {
+  editingPath.value = false;
+};
+
+const submitPath = () => {
+  let target = pathDraft.value.trim();
+  if (!target) target = "/";
+  if (target.startsWith("/files")) target = target.slice(5) || "/";
+  if (!target.startsWith("/")) target = "/" + target;
+  target = target.replace(/\/+$/, "");
+  if (!target) target = "/";
+  editingPath.value = false;
+  router.push("/files" + (target === "/" ? "/" : target));
+};
+
+const selectAll = () => {
+  const req = fileStore.req;
+  if (req) fileStore.selected = req.items.map((item) => item.index);
+};
 
 const setView = (mode: "list" | "grid") => {
   yc.setViewMode(mode);
@@ -449,6 +597,93 @@ const newPrompt = (name: string) => {
   border: 1px solid var(--yc-border);
   border-radius: var(--yc-radius-sm);
   background: var(--yc-surface-2);
+}
+
+.yc-crumbs-box.is-editing {
+  background: var(--yc-surface);
+  border-color: var(--yc-accent);
+}
+.yc-path-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--yc-text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.yc-path-input::placeholder {
+  color: var(--yc-muted);
+}
+.yc-path-edit {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--yc-muted);
+  cursor: pointer;
+  flex: none;
+}
+.yc-path-edit:hover {
+  background: var(--yc-accent-soft);
+  color: var(--yc-accent);
+}
+
+.yc-toolbar__icon {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--yc-text-2);
+  cursor: pointer;
+  flex: none;
+}
+.yc-toolbar__icon:hover {
+  background: var(--yc-accent-soft);
+  color: var(--yc-accent);
+}
+.yc-toolbar__icon.is-active {
+  background: var(--yc-accent-soft);
+  color: var(--yc-accent);
+}
+.yc-toolbar__sizes {
+  display: flex;
+  gap: 1px;
+  padding: 2px;
+  border: 1px solid var(--yc-border);
+  border-radius: 8px;
+  background: var(--yc-surface-2);
+  flex: none;
+}
+.yc-toolbar__size {
+  width: 26px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--yc-muted);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.yc-toolbar__size.is-active {
+  background: var(--yc-surface);
+  color: var(--yc-accent);
+  font-weight: 600;
+}
+.yc-toolbar__btn.is-active {
+  background: var(--yc-accent-soft);
+  color: var(--yc-accent);
 }
 
 .yc-toolbar {
@@ -851,6 +1086,11 @@ const newPrompt = (name: string) => {
     min-width: 0;
     border: 0;
     box-shadow: none;
+  }
+}
+@media (min-width: 1025px) {
+  .yc-top-collapsible {
+    display: none !important;
   }
 }
 </style>
