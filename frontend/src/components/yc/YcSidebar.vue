@@ -44,18 +44,8 @@
         >
           <YcIcon name="home" :size="18" />
           <span>我的文件</span>
-          <button
-            class="yc-tree__chevron"
-            :title="rootOpen ? '收起' : '展开'"
-            @click.stop="rootOpen = !rootOpen"
-          >
-            <YcIcon
-              :name="rootOpen ? 'chevron-down' : 'chevron-right'"
-              :size="13"
-            />
-          </button>
         </div>
-        <div v-if="rootOpen" class="yc-tree__children">
+        <div class="yc-tree__children">
           <p v-if="volumesLoading" class="yc-nav__empty">读取存储空间…</p>
           <p v-else-if="volumes.length === 0" class="yc-nav__empty">
             暂无存储空间
@@ -222,7 +212,6 @@ const canLogout = computed(
 
 const showRecent = ref(false);
 const showFavorites = ref(false);
-const rootOpen = ref(true);
 const volumes = ref<VolumeInfo[]>([]);
 const volumesLoading = ref(true);
 
