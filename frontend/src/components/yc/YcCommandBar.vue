@@ -69,118 +69,18 @@
       <kbd>Ctrl K</kbd>
     </button>
 
-    <div ref="viewRef" class="yc-view yc-top-collapsible">
-      <button
-        class="yc-iconbtn yc-view__trigger"
-        :class="{ 'is-active': viewOpen }"
-        title="视图设置"
-        @click="viewOpen = !viewOpen"
-      >
-        <YcIcon
-          :name="yc.viewMode === 'grid' ? 'grid' : 'list'"
-          :size="18"
-        />
-        <YcIcon name="chevron-down" :size="11" class="yc-view__caret" />
-      </button>
-
-      <div v-if="viewOpen" class="yc-view__menu">
-        <p class="yc-view__caption">视图</p>
-        <button
-          class="yc-view__item"
-          :class="{ 'is-active': yc.viewMode === 'list' }"
-          @click="setView('list')"
-        >
-          <YcIcon name="list" :size="16" />
-          <span>列表</span>
-          <YcIcon
-            v-if="yc.viewMode === 'list'"
-            name="check"
-            :size="14"
-            class="yc-view__check"
-          />
-        </button>
-        <button
-          class="yc-view__item"
-          :class="{ 'is-active': yc.viewMode === 'grid' }"
-          @click="setView('grid')"
-        >
-          <YcIcon name="grid" :size="16" />
-          <span>图标</span>
-          <YcIcon
-            v-if="yc.viewMode === 'grid'"
-            name="check"
-            :size="14"
-            class="yc-view__check"
-          />
-        </button>
-
-        <div class="yc-view__sep" />
-
-        <div class="yc-view__subwrap">
-          <button
-            class="yc-view__item"
-            :class="{ 'is-disabled': yc.viewMode !== 'grid' }"
-            @click="toggleSize"
-          >
-            <YcIcon name="grid" :size="16" />
-            <span class="yc-view__grow">
-              图标大小
-              <small>{{ sizeLabel }}</small>
-            </span>
-            <YcIcon name="chevron-right" :size="13" class="yc-view__arrow" />
-          </button>
-          <div v-if="sizeOpen && yc.viewMode === 'grid'" class="yc-view__submenu">
-            <button
-              v-for="size in iconSizes"
-              :key="size.id"
-              class="yc-view__item"
-              :class="{ 'is-active': yc.iconSize === size.id }"
-              @click="chooseSize(size.id)"
-            >
-              <span>{{ size.label }}</span>
-              <YcIcon
-                v-if="yc.iconSize === size.id"
-                name="check"
-                :size="14"
-                class="yc-view__check"
-              />
-            </button>
-          </div>
-        </div>
-
-        <div class="yc-view__sep" />
-
-        <button class="yc-view__item" @click="yc.toggleGrouped()">
-          <YcIcon name="columns" :size="16" />
-          <span class="yc-view__grow">
-            分组显示
-            <small>文件夹在上，文件在下</small>
-          </span>
-          <YcIcon
-            v-if="yc.grouped"
-            name="check"
-            :size="14"
-            class="yc-view__check"
-          />
-        </button>
-
-        <div class="yc-view__sep" />
-
-        <button class="yc-view__item" @click="toggleHidden">
-          <YcIcon name="eye" :size="16" />
-          <span class="yc-view__grow">
-            显示隐藏项目
-            <small>以点开头的文件</small>
-          </span>
-          <YcIcon
-            v-if="showHidden"
-            name="check"
-            :size="14"
-            class="yc-view__check"
-          />
-        </button>
-      </div>
-    </div>
+    <button
+      class="yc-iconbtn yc-mobile-view yc-view-trigger"
+      :class="{ 'is-active': viewOpen }"
+      title="视图设置"
+      @click="toggleViewMenu"
+    >
+      <YcIcon
+        :name="yc.viewMode === 'grid' ? 'grid' : 'list'"
+        :size="18"
+      />
+      <YcIcon name="chevron-down" :size="11" class="yc-view__caret" />
+    </button>
 
     <button
       class="yc-iconbtn yc-details-toggle yc-top-collapsible"
@@ -221,40 +121,16 @@
 
     <div class="yc-toolbar">
       <button
-        class="yc-toolbar__icon"
-        :class="{ 'is-active': yc.viewMode === 'list' }"
-        title="列表视图"
-        @click="yc.setViewMode('list')"
+        class="yc-toolbar__btn yc-view-trigger"
+        :class="{ 'is-active': viewOpen }"
+        @click="toggleViewMenu"
       >
-        <YcIcon name="list" :size="17" />
-      </button>
-      <button
-        class="yc-toolbar__icon"
-        :class="{ 'is-active': yc.viewMode === 'grid' }"
-        title="图标视图"
-        @click="yc.setViewMode('grid')"
-      >
-        <YcIcon name="grid" :size="16" />
-      </button>
-      <div class="yc-toolbar__sizes">
-        <button
-          v-for="size in iconSizes"
-          :key="size.id"
-          class="yc-toolbar__size"
-          :class="{ 'is-active': yc.iconSize === size.id }"
-          :title="`${size.label}图标`"
-          @click="yc.setIconSize(size.id)"
-        >
-          {{ size.label }}
-        </button>
-      </div>
-      <button
-        class="yc-toolbar__icon"
-        :class="{ 'is-active': yc.grouped }"
-        title="分组显示"
-        @click="yc.toggleGrouped()"
-      >
-        <YcIcon name="folder" :size="17" />
+        <YcIcon :name="yc.viewMode === 'grid' ? 'grid' : 'list'" :size="16" />
+        视图
+        <span class="yc-toolbar__value">{{
+          yc.viewMode === 'grid' ? '图标' : '列表'
+        }}</span>
+        <YcIcon name="chevron-down" :size="12" />
       </button>
       <span class="yc-toolbar__sep" />
       <button
@@ -352,6 +228,111 @@
         >已选 {{ selCount }} 项</span
       >
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="viewOpen"
+        ref="viewMenuRef"
+        class="yc-view__menu yc-view__menu--fixed"
+        :style="menuStyle"
+      >
+        <p class="yc-view__caption">视图</p>
+        <button
+          class="yc-view__item"
+          :class="{ 'is-active': yc.viewMode === 'list' }"
+          @click="setView('list')"
+        >
+          <YcIcon name="list" :size="16" />
+          <span>列表</span>
+          <YcIcon
+            v-if="yc.viewMode === 'list'"
+            name="check"
+            :size="14"
+            class="yc-view__check"
+          />
+        </button>
+        <button
+          class="yc-view__item"
+          :class="{ 'is-active': yc.viewMode === 'grid' }"
+          @click="setView('grid')"
+        >
+          <YcIcon name="grid" :size="16" />
+          <span>图标</span>
+          <YcIcon
+            v-if="yc.viewMode === 'grid'"
+            name="check"
+            :size="14"
+            class="yc-view__check"
+          />
+        </button>
+
+        <div class="yc-view__sep" />
+
+        <div class="yc-view__subwrap">
+          <button
+            class="yc-view__item"
+            :class="{ 'is-disabled': yc.viewMode !== 'grid' }"
+            @click="toggleSize"
+          >
+            <YcIcon name="grid" :size="16" />
+            <span class="yc-view__grow">
+              图标大小
+              <small>{{ sizeLabel }}</small>
+            </span>
+            <YcIcon name="chevron-right" :size="13" class="yc-view__arrow" />
+          </button>
+          <div v-if="sizeOpen && yc.viewMode === 'grid'" class="yc-view__submenu">
+            <button
+              v-for="size in iconSizes"
+              :key="size.id"
+              class="yc-view__item"
+              :class="{ 'is-active': yc.iconSize === size.id }"
+              @click="chooseSize(size.id)"
+            >
+              <span>{{ size.label }}</span>
+              <YcIcon
+                v-if="yc.iconSize === size.id"
+                name="check"
+                :size="14"
+                class="yc-view__check"
+              />
+            </button>
+          </div>
+        </div>
+
+        <div class="yc-view__sep" />
+
+        <button class="yc-view__item" @click="yc.toggleGrouped()">
+          <YcIcon name="columns" :size="16" />
+          <span class="yc-view__grow">
+            分组显示
+            <small>文件夹在上，文件在下</small>
+          </span>
+          <YcIcon
+            v-if="yc.grouped"
+            name="check"
+            :size="14"
+            class="yc-view__check"
+          />
+        </button>
+
+        <div class="yc-view__sep" />
+
+        <button class="yc-view__item" @click="toggleHidden">
+          <YcIcon name="eye" :size="16" />
+          <span class="yc-view__grow">
+            显示隐藏项目
+            <small>以点开头的文件</small>
+          </span>
+          <YcIcon
+            v-if="showHidden"
+            name="check"
+            :size="14"
+            class="yc-view__check"
+          />
+        </button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -383,7 +364,32 @@ const $showError = inject<IToastError>("$showError")!;
 const newOpen = ref(false);
 const viewOpen = ref(false);
 const sizeOpen = ref(false);
-const viewRef = ref<HTMLElement | null>(null);
+const viewMenuRef = ref<HTMLElement | null>(null);
+const menuStyle = ref<Record<string, string>>({});
+
+const toggleViewMenu = (event: MouseEvent) => {
+  if (viewOpen.value) {
+    viewOpen.value = false;
+    sizeOpen.value = false;
+    return;
+  }
+
+  const trigger = event.currentTarget as HTMLElement | null;
+  if (!trigger) return;
+
+  const rect = trigger.getBoundingClientRect();
+  const width = 200;
+  const left = Math.max(
+    8,
+    Math.min(rect.right - width, window.innerWidth - width - 8)
+  );
+  menuStyle.value = {
+    top: `${rect.bottom + 6}px`,
+    left: `${left}px`,
+  };
+  viewOpen.value = true;
+  sizeOpen.value = false;
+};
 
 const iconSizes = [
   { id: "small", label: "小" },
@@ -514,11 +520,10 @@ const toggleHidden = async () => {
 
 const onDocClick = (event: MouseEvent) => {
   if (!viewOpen.value) return;
-  const target = event.target as Node | null;
-  if (target && viewRef.value && !viewRef.value.contains(target)) {
-    viewOpen.value = false;
-    sizeOpen.value = false;
-  }
+  const target = event.target as HTMLElement | null;
+  if (target?.closest(".yc-view__menu, .yc-view-trigger")) return;
+  viewOpen.value = false;
+  sizeOpen.value = false;
 };
 
 const onEsc = (event: KeyboardEvent) => {
@@ -1088,8 +1093,22 @@ const newPrompt = (name: string) => {
     box-shadow: none;
   }
 }
+.yc-view__menu--fixed {
+  position: fixed;
+  right: auto;
+  top: auto;
+}
+.yc-toolbar__value {
+  font-size: 11px;
+  color: var(--yc-muted);
+  margin-left: 2px;
+}
+
 @media (min-width: 1025px) {
   .yc-top-collapsible {
+    display: none !important;
+  }
+  .yc-mobile-view {
     display: none !important;
   }
 }
