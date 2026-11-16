@@ -31,7 +31,7 @@
     <div v-if="isLoggedIn" class="yc-nav">
       <p class="yc-nav__caption">快速访问</p>
       <div
-        class="yc-nav__item yc-tree__root"
+        class="yc-nav__item yc-tree__root yc-nav__item--card"
         :class="{ 'is-active': isRoot }"
         role="button"
         tabindex="0"
@@ -64,66 +64,75 @@
         />
       </div>
 
-      <button class="yc-nav__item" @click="toggleRecent">
-        <YcIcon name="clock" :size="18" />
-        <span>最近使用</span>
-        <span v-if="recent.length" class="yc-nav__count">{{ recent.length }}</span>
-        <YcIcon
-          :name="showRecent ? 'chevron-up' : 'chevron-down'"
-          :size="14"
-          class="yc-nav__chevron"
-        />
-      </button>
-      <div v-if="showRecent" class="yc-nav__sub">
-        <p v-if="!recent.length" class="yc-nav__empty">还没有访问记录</p>
-        <button
-          v-for="item in recent"
-          :key="item.path"
-          class="yc-nav__subitem"
-          @click="go(item.path)"
-        >
-          {{ item.name }}
+      <div class="yc-nav__card">
+        <button class="yc-nav__item" @click="toggleRecent">
+          <YcIcon name="clock" :size="18" />
+          <span>最近使用</span>
+          <span v-if="recent.length" class="yc-nav__count">{{
+            recent.length
+          }}</span>
+          <YcIcon
+            :name="showRecent ? 'chevron-up' : 'chevron-down'"
+            :size="14"
+            class="yc-nav__chevron"
+          />
         </button>
+        <div v-if="showRecent" class="yc-nav__sub">
+          <p v-if="!recent.length" class="yc-nav__empty">还没有访问记录</p>
+          <button
+            v-for="item in recent"
+            :key="item.path"
+            class="yc-nav__subitem"
+            @click="go(item.path)"
+          >
+            {{ item.name }}
+          </button>
+        </div>
       </div>
 
-      <button class="yc-nav__item" @click="toggleFavorites">
-        <YcIcon name="star" :size="18" />
-        <span>收藏</span>
-        <span v-if="favorites.length" class="yc-nav__count">{{
-          favorites.length
-        }}</span>
-        <YcIcon
-          :name="showFavorites ? 'chevron-up' : 'chevron-down'"
-          :size="14"
-          class="yc-nav__chevron"
-        />
-      </button>
-      <div v-if="showFavorites" class="yc-nav__sub">
-        <p v-if="!favorites.length" class="yc-nav__empty">
-          在详情面板点星标收藏文件夹
-        </p>
-        <button
-          v-for="item in favorites"
-          :key="item.path"
-          class="yc-nav__subitem"
-          @click="go(item.path)"
-        >
-          <YcIcon name="folder" :size="14" />
-          {{ item.name }}
+      <div class="yc-nav__card">
+        <button class="yc-nav__item" @click="toggleFavorites">
+          <YcIcon name="star" :size="18" />
+          <span>收藏</span>
+          <span v-if="favorites.length" class="yc-nav__count">{{
+            favorites.length
+          }}</span>
+          <YcIcon
+            :name="showFavorites ? 'chevron-up' : 'chevron-down'"
+            :size="14"
+            class="yc-nav__chevron"
+          />
         </button>
+        <div v-if="showFavorites" class="yc-nav__sub">
+          <p v-if="!favorites.length" class="yc-nav__empty">
+            在详情面板点星标收藏文件夹
+          </p>
+          <button
+            v-for="item in favorites"
+            :key="item.path"
+            class="yc-nav__subitem"
+            @click="go(item.path)"
+          >
+            <YcIcon name="folder" :size="14" />
+            {{ item.name }}
+          </button>
+        </div>
       </div>
 
       <p class="yc-nav__caption">工具</p>
-      <button class="yc-nav__item" @click="go('/shares')">
+      <button
+        class="yc-nav__item yc-nav__item--card"
+        @click="go('/shares')"
+      >
         <YcIcon name="link" :size="18" />
         <span>分享管理</span>
       </button>
-      <button class="yc-nav__item is-disabled" disabled>
+      <button class="yc-nav__item is-disabled yc-nav__item--card" disabled>
         <YcIcon name="transfer" :size="18" />
         <span>传输任务</span>
         <span class="yc-nav__soon">即将</span>
       </button>
-      <button class="yc-nav__item is-disabled" disabled>
+      <button class="yc-nav__item is-disabled yc-nav__item--card" disabled>
         <YcIcon name="trash" :size="18" />
         <span>回收站</span>
         <span class="yc-nav__soon">即将</span>
@@ -132,7 +141,7 @@
       <template v-if="isAdmin">
         <p class="yc-nav__caption">系统</p>
         <button
-          class="yc-nav__item"
+          class="yc-nav__item yc-nav__item--card"
           :class="{ 'is-active': route.path.startsWith('/settings') }"
           @click="go('/settings/global')"
         >
@@ -473,6 +482,34 @@ watch(
   background: var(--yc-surface-2);
   color: var(--yc-muted);
 }
+.yc-nav__item--card {
+  border: 1px solid var(--yc-border);
+  border-radius: 10px;
+  margin-bottom: 6px;
+  background: var(--yc-surface);
+}
+.yc-nav__item--card:hover {
+  border-color: var(--yc-border-strong);
+}
+.yc-nav__item--card.is-active {
+  border-color: var(--yc-accent);
+}
+
+.yc-nav__card {
+  border: 1px solid var(--yc-border);
+  border-radius: 10px;
+  margin-bottom: 6px;
+  background: var(--yc-surface);
+  overflow: hidden;
+}
+.yc-nav__card .yc-nav__item {
+  border-radius: 0;
+  margin-bottom: 0;
+}
+.yc-nav__card .yc-nav__sub {
+  padding: 0 6px 6px 24px;
+}
+
 .yc-nav__sub {
   padding: 2px 0 4px 38px;
   display: flex;

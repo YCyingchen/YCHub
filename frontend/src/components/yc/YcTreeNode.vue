@@ -40,9 +40,10 @@
         <span class="yc-tree__bar">
           <span :style="{ width: percent + '%' }" />
         </span>
-        <span class="yc-tree__capText"
-          >已用 {{ usedText }} · 剩余 {{ freeText }}</span
-        >
+        <span class="yc-tree__capRow">
+          <span>已用 {{ usedText }}</span>
+          <span>剩余 {{ freeText }}</span>
+        </span>
       </span>
     </div>
 
@@ -264,26 +265,29 @@ const openPath = () => {
 
 .yc-tree__capacity {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 2px 0 0 23px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 4px 0 1px 23px;
 }
 .yc-tree__bar {
-  flex: 1;
-  height: 4px;
+  width: 100%;
+  height: 5px;
   min-width: 24px;
-  border-radius: 2px;
+  border-radius: 3px;
   background: var(--yc-border);
   overflow: hidden;
 }
 .yc-tree__bar > span {
   display: block;
   height: 100%;
-  border-radius: 2px;
+  border-radius: 3px;
   background: var(--yc-accent);
 }
-.yc-tree__capText {
-  flex: none;
+.yc-tree__capRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
   font-size: 9.5px;
   color: var(--yc-muted);
   white-space: nowrap;
