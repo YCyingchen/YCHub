@@ -111,10 +111,10 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 
 <style scoped>
 .yc-grid {
-  --yc-grid-icon: 76px;
-  --yc-grid-radius: 16px;
-  --yc-grid-w: 150px;
-  --yc-grid-h: 186px;
+  --yc-grid-icon: 92px;
+  --yc-grid-radius: 18px;
+  --yc-grid-w: 164px;
+  --yc-grid-h: 214px;
   --yc-grid-gap: 12px;
   --yc-grid-pad: 14px;
   --yc-card-pad: 13px;
@@ -127,10 +127,10 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 }
 
 .yc-grid.is-small {
-  --yc-grid-icon: 56px;
-  --yc-grid-radius: 12px;
-  --yc-grid-w: 118px;
-  --yc-grid-h: 148px;
+  --yc-grid-icon: 64px;
+  --yc-grid-radius: 14px;
+  --yc-grid-w: 124px;
+  --yc-grid-h: 166px;
   --yc-grid-gap: 8px;
   --yc-grid-pad: 12px;
   --yc-card-pad: 10px;
@@ -138,10 +138,10 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 }
 
 .yc-grid.is-large {
-  --yc-grid-icon: 104px;
-  --yc-grid-radius: 22px;
-  --yc-grid-w: 190px;
-  --yc-grid-h: 238px;
+  --yc-grid-icon: 128px;
+  --yc-grid-radius: 24px;
+  --yc-grid-w: 208px;
+  --yc-grid-h: 270px;
   --yc-grid-gap: 14px;
   --yc-grid-pad: 18px;
   --yc-card-pad: 16px;
@@ -153,7 +153,7 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
   gap: 6px;
   width: var(--yc-grid-w);
@@ -184,7 +184,7 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
   overflow: hidden;
   background: var(--yc-type-doc);
   color: var(--yc-type-doc-fg);
-  margin-bottom: 6px;
+  margin: 4px auto 6px;
   flex: none;
 }
 .yc-card__icon img {
@@ -219,6 +219,7 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
   color: var(--yc-text);
   width: 100%;
   text-align: center;
+  margin-top: auto;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -254,9 +255,9 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 
 @media (max-width: 900px) {
   .yc-grid.is-large {
-    --yc-grid-w: 152px;
-    --yc-grid-h: 210px;
-    --yc-grid-icon: 84px;
+    --yc-grid-w: 172px;
+    --yc-grid-h: 236px;
+    --yc-grid-icon: 104px;
   }
 }
 </style>
