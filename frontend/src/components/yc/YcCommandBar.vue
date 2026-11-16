@@ -593,6 +593,7 @@ const newPrompt = (name: string) => {
     padding: 6px 10px;
     gap: 6px;
     row-gap: 4px;
+    justify-content: space-between;
   }
   .yc-commandbar__menu {
     display: grid;

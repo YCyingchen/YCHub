@@ -135,6 +135,15 @@ const onClick = (item: ResourceItem, event: MouseEvent) => {
     fileStore.selected = range;
     return;
   }
+  // 桌面端再次单击已选中的唯一项目时取消选择
+  if (
+    window.innerWidth > 900 &&
+    fileStore.selected.length === 1 &&
+    fileStore.selected[0] === item.index
+  ) {
+    fileStore.selected = [];
+    return;
+  }
   fileStore.selected = [item.index];
   emit("select", item.index, event);
   // 触屏 / 窄屏没有双击语义，单击直接进入

@@ -5,8 +5,8 @@
     <div class="yc-files__body">
       <section
         class="yc-files__listing"
-        @click.self="clearSelection"
-        @contextmenu.self.prevent="openBlankMenu($event)"
+        @click="onListingClick"
+        @contextmenu.prevent="onListingContext"
       >
         <div v-if="layoutStore.loading" class="yc-state">
           <span class="yc-spinner" />
@@ -232,6 +232,20 @@ const openMenu = (item: ResourceItem, event: MouseEvent) => {
 const openBlankMenu = (event: MouseEvent) => {
   fileStore.selected = [];
   openMenuAt(event, null);
+};
+
+const isItemTarget = (event: Event) => {
+  const el = event.target as HTMLElement | null;
+  return !!el?.closest(".yc-card, .yc-row");
+};
+
+const onListingClick = (event: MouseEvent) => {
+  if (!isItemTarget(event)) clearSelection();
+};
+
+const onListingContext = (event: MouseEvent) => {
+  if (isItemTarget(event)) return;
+  openBlankMenu(event);
 };
 
 const open = (item: ResourceItem) => {
