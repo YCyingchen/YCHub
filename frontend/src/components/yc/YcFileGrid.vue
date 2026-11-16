@@ -113,13 +113,15 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 .yc-grid {
   --yc-grid-icon: 76px;
   --yc-grid-radius: 16px;
-  --yc-grid-min: 180px;
+  --yc-grid-w: 150px;
+  --yc-grid-h: 186px;
   --yc-grid-gap: 12px;
   --yc-grid-pad: 14px;
   --yc-card-pad: 13px;
   --yc-grid-name: 13px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--yc-grid-min), 1fr));
+  grid-template-columns: repeat(auto-fill, var(--yc-grid-w));
+  justify-content: center;
   gap: var(--yc-grid-gap);
   padding: var(--yc-grid-pad);
 }
@@ -127,7 +129,8 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 .yc-grid.is-small {
   --yc-grid-icon: 56px;
   --yc-grid-radius: 12px;
-  --yc-grid-min: 140px;
+  --yc-grid-w: 118px;
+  --yc-grid-h: 148px;
   --yc-grid-gap: 8px;
   --yc-grid-pad: 12px;
   --yc-card-pad: 10px;
@@ -137,7 +140,8 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 .yc-grid.is-large {
   --yc-grid-icon: 104px;
   --yc-grid-radius: 22px;
-  --yc-grid-min: 220px;
+  --yc-grid-w: 190px;
+  --yc-grid-h: 238px;
   --yc-grid-gap: 14px;
   --yc-grid-pad: 18px;
   --yc-card-pad: 16px;
@@ -148,8 +152,12 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 6px;
+  width: var(--yc-grid-w);
+  min-height: var(--yc-grid-h);
   padding: var(--yc-card-pad);
   border: 1px solid var(--yc-border);
   border-radius: var(--yc-radius);
@@ -176,7 +184,7 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
   overflow: hidden;
   background: var(--yc-type-doc);
   color: var(--yc-type-doc-fg);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   flex: none;
 }
 .yc-card__icon img {
@@ -210,6 +218,7 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
   font-size: var(--yc-grid-name);
   color: var(--yc-text);
   width: 100%;
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -217,6 +226,8 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 .yc-card__meta {
   font-size: 11px;
   color: var(--yc-muted);
+  text-align: center;
+  width: 100%;
 }
 .yc-card__more {
   position: absolute;
@@ -243,7 +254,8 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 
 @media (max-width: 900px) {
   .yc-grid.is-large {
-    --yc-grid-min: 170px;
+    --yc-grid-w: 152px;
+    --yc-grid-h: 210px;
     --yc-grid-icon: 84px;
   }
 }
