@@ -92,6 +92,7 @@ onBeforeUnmount(() => document.body.classList.remove("yc-settings-mode"));
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
   background: var(--yc-bg);
 }
 

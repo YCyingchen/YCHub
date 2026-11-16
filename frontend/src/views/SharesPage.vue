@@ -39,6 +39,7 @@ onBeforeUnmount(() => document.body.classList.remove("yc-shares-mode"));
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
   background: var(--yc-bg);
 }
 .yc-page__bar {
