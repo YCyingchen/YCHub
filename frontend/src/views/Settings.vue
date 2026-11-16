@@ -73,11 +73,7 @@
       </aside>
 
       <div class="yc-settings__content">
-        <div v-if="loading" class="yc-settings__loading">
-          <span class="yc-spinner" />
-          <span>{{ t("files.loading") }}</span>
-        </div>
-        <router-view v-else></router-view>
+        <router-view></router-view>
       </div>
     </div>
   </div>
@@ -87,16 +83,12 @@
 import { useAuthStore } from "@/stores/auth";
 import { useLayoutStore } from "@/stores/layout";
 import { computed, onBeforeUnmount, onMounted } from "vue";
-import { useI18n } from "vue-i18n";
 import YcIcon from "@/components/yc/YcIcon.vue";
-
-const { t } = useI18n();
 
 const authStore = useAuthStore();
 const layoutStore = useLayoutStore();
 
 const user = computed(() => authStore.user);
-const loading = computed(() => layoutStore.loading);
 
 const openSidebar = () => layoutStore.showHover("sidebar");
 
