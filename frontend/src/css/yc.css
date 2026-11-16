@@ -86,7 +86,7 @@
 }
 
 body {
-  padding-top: 0;
+  padding-top: 4em;
   font-family: var(--yc-font);
   background: var(--yc-bg);
   color: var(--yc-text);
@@ -100,7 +100,8 @@ main.yc-main {
 }
 
 /* 文件页占满整屏，不再为旧版 4em 顶栏留白 */
-body.yc-files-mode {
+body.yc-files-mode,
+body.yc-login-mode {
   padding-top: 0;
 }
 body.yc-files-mode main.yc-main {
