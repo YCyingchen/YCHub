@@ -620,7 +620,7 @@ const newPrompt = (name: string) => {
     width: 30px;
     height: 30px;
   }
-  .yc-view__trigger {
+  .yc-iconbtn.yc-view__trigger {
     width: auto;
     padding: 0 4px;
   }

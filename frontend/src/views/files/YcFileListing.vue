@@ -148,6 +148,11 @@
         </template>
       </div>
     </Teleport>
+
+    <YcSearch
+      v-if="layoutStore.currentPromptName === 'search'"
+      @close="layoutStore.closeHovers()"
+    />
   </div>
 </template>
 
@@ -164,6 +169,7 @@ import YcCommandBar from "@/components/yc/YcCommandBar.vue";
 import YcFileList from "@/components/yc/YcFileList.vue";
 import YcFileGrid from "@/components/yc/YcFileGrid.vue";
 import YcDetails from "@/components/yc/YcDetails.vue";
+import YcSearch from "@/components/yc/YcSearch.vue";
 import YcStatusBar from "@/components/yc/YcStatusBar.vue";
 import YcIcon from "@/components/yc/YcIcon.vue";
 

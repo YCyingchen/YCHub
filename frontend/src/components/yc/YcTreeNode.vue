@@ -32,6 +32,19 @@
       </button>
     </div>
 
+    <div
+      v-if="node.mount && node.total"
+      class="yc-tree__capacity"
+      :style="{ paddingLeft: 8 + depth * 14 + 23 + 'px' }"
+    >
+      <span class="yc-tree__bar">
+        <span :style="{ width: percent + '%' }" />
+      </span>
+      <span class="yc-tree__capText"
+        >已用 {{ usedText }} · 剩余 {{ freeText }}</span
+      >
+    </div>
+
     <div v-if="expanded" class="yc-tree__children">
       <p
         v-if="loading"
@@ -95,10 +108,28 @@ const isActive = computed(() => {
   return current === target;
 });
 
-const usageText = computed(() => {
-  if (!props.node.total) return "";
-  return `${Math.round((props.node.used ?? 0) / props.node.total * 100)}%`;
+const percent = computed(() => {
+  if (!props.node.total) return 0;
+  return Math.min(
+    100,
+    Math.round(((props.node.used ?? 0) / props.node.total) * 100)
+  );
 });
+
+const usageText = computed(() =>
+  props.node.total ? `${percent.value}%` : ""
+);
+
+const usedText = computed(() =>
+  prettyBytes(props.node.used ?? 0, { binary: true })
+);
+
+const freeText = computed(() =>
+  prettyBytes(
+    Math.max(0, (props.node.total ?? 0) - (props.node.used ?? 0)),
+    { binary: true }
+  )
+);
 
 const load = async () => {
   if (loaded.value || loading.value) return;
@@ -177,6 +208,33 @@ const openPath = () => {
   font-size: 10px;
   color: var(--yc-muted);
   flex: none;
+}
+.yc-tree__capacity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 8px;
+  margin: -4px 0 6px;
+}
+.yc-tree__bar {
+  flex: 1;
+  height: 4px;
+  min-width: 24px;
+  border-radius: 2px;
+  background: var(--yc-border);
+  overflow: hidden;
+}
+.yc-tree__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--yc-accent);
+}
+.yc-tree__capText {
+  flex: none;
+  font-size: 9.5px;
+  color: var(--yc-muted);
+  white-space: nowrap;
 }
 .yc-tree__chevron {
   width: 18px;
