@@ -216,17 +216,17 @@ const openPath = () => {
 }
 .yc-tree__row.is-mount .yc-tree__main {
   flex: none;
-  padding-right: 24px;
+  padding-right: 28px;
 }
 .yc-tree__row.is-mount .yc-tree__chevron {
   position: absolute;
   top: 50%;
-  right: 10px;
-  width: 22px;
-  height: 22px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
   margin: 0;
-  border-radius: 50%;
-  background: var(--yc-surface-2);
+  border-radius: 0;
+  background: transparent;
   transform: translateY(-50%);
 }
 .yc-tree__row.is-mount:hover {
@@ -281,7 +281,7 @@ const openPath = () => {
   flex-direction: column;
   align-items: stretch;
   gap: 4px;
-  padding: 4px 0 1px 23px;
+  padding: 4px 26px 1px 23px;
 }
 .yc-tree__bar {
   width: 100%;
