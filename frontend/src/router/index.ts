@@ -4,12 +4,12 @@ import Login from "@/views/Login.vue";
 import Layout from "@/views/Layout.vue";
 import Files from "@/views/Files.vue";
 import Share from "@/views/Share.vue";
+import SharesPage from "@/views/SharesPage.vue";
 import Users from "@/views/settings/Users.vue";
 import User from "@/views/settings/User.vue";
 import Settings from "@/views/Settings.vue";
 import GlobalSettings from "@/views/settings/Global.vue";
 import ProfileSettings from "@/views/settings/Profile.vue";
-import Shares from "@/views/settings/Shares.vue";
 import Appearance from "@/views/settings/Appearance.vue";
 import Storage from "@/views/settings/Storage.vue";
 import About from "@/views/settings/About.vue";
@@ -23,6 +23,7 @@ import { login, validateLogin } from "@/utils/auth";
 const titles = {
   Login: "sidebar.login",
   Share: "buttons.share",
+  SharesPage: "分享管理",
   Files: "files.files",
   Settings: "sidebar.settings",
   ProfileSettings: "settings.profileSettings",
@@ -70,6 +71,20 @@ const routes = [
     ],
   },
   {
+    path: "/shares",
+    component: Layout,
+    meta: {
+      requiresAuth: true,
+    },
+    children: [
+      {
+        path: "",
+        name: "SharesPage",
+        component: SharesPage,
+      },
+    ],
+  },
+  {
     path: "/settings",
     component: Layout,
     meta: {
@@ -107,7 +122,7 @@ const routes = [
           {
             path: "shares",
             name: "Shares",
-            component: Shares,
+            redirect: "/shares",
           },
           {
             path: "global",

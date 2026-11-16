@@ -34,15 +34,6 @@
           存储
         </router-link>
         <router-link
-          v-if="user?.perm.share"
-          to="/settings/shares"
-          class="yc-settings__link"
-          active-class="is-active"
-        >
-          <YcIcon name="link" :size="17" />
-          分享
-        </router-link>
-        <router-link
           to="/settings/about"
           class="yc-settings__link"
           active-class="is-active"

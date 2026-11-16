@@ -30,14 +30,39 @@
 
     <div v-if="isLoggedIn" class="yc-nav">
       <p class="yc-nav__caption">快速访问</p>
-      <button
-        class="yc-nav__item"
+      <div
+        class="yc-nav__item yc-tree__root"
         :class="{ 'is-active': isRoot }"
+        role="button"
+        tabindex="0"
         @click="go('/files')"
+        @keydown.enter="go('/files')"
       >
         <YcIcon name="home" :size="18" />
         <span>我的文件</span>
-      </button>
+        <button
+          class="yc-tree__chevron"
+          :title="rootOpen ? '收起' : '展开'"
+          @click.stop="rootOpen = !rootOpen"
+        >
+          <YcIcon
+            :name="rootOpen ? 'chevron-down' : 'chevron-right'"
+            :size="13"
+          />
+        </button>
+      </div>
+      <div v-if="rootOpen" class="yc-tree__children">
+        <p v-if="volumesLoading" class="yc-nav__empty">读取存储空间…</p>
+        <p v-else-if="volumes.length === 0" class="yc-nav__empty">
+          暂无存储空间
+        </p>
+        <YcTreeNode
+          v-for="vol in volumes"
+          :key="vol.path"
+          :node="vol"
+          :depth="1"
+        />
+      </div>
 
       <button class="yc-nav__item" @click="toggleRecent">
         <YcIcon name="clock" :size="18" />
@@ -89,7 +114,7 @@
       </div>
 
       <p class="yc-nav__caption">工具</p>
-      <button class="yc-nav__item" @click="go('/settings/shares')">
+      <button class="yc-nav__item" @click="go('/shares')">
         <YcIcon name="link" :size="18" />
         <span>分享管理</span>
       </button>
@@ -145,7 +170,7 @@ import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { useLayoutStore } from "@/stores/layout";
 import { useYcStore } from "@/stores/yc";
-import { files as api } from "@/api";
+import { files as api, volumes as volumesApi } from "@/api";
 import * as auth from "@/utils/auth";
 import {
   version,
@@ -156,6 +181,7 @@ import {
 } from "@/utils/constants";
 import prettyBytes from "pretty-bytes";
 import YcIcon from "@/components/yc/YcIcon.vue";
+import YcTreeNode from "@/components/yc/YcTreeNode.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -182,6 +208,9 @@ const canLogout = computed(
 
 const showRecent = ref(false);
 const showFavorites = ref(false);
+const rootOpen = ref(true);
+const volumes = ref<VolumeInfo[]>([]);
+const volumesLoading = ref(true);
 
 const used = ref("0 B");
 const total = ref("0 B");
@@ -221,7 +250,21 @@ const fetchUsage = async () => {
   }
 };
 
-onMounted(fetchUsage);
+const loadVolumes = async () => {
+  volumesLoading.value = true;
+  try {
+    volumes.value = await volumesApi.list();
+  } catch {
+    volumes.value = [];
+  } finally {
+    volumesLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchUsage();
+  loadVolumes();
+});
 watch(
   () => route.path,
   (p) => {
@@ -435,6 +478,37 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 1px;
+}
+
+.yc-tree__root {
+  cursor: pointer;
+}
+.yc-tree__root > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.yc-tree__chevron {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--yc-muted);
+  cursor: pointer;
+  flex: none;
+  margin-left: auto;
+}
+.yc-tree__chevron:hover {
+  background: var(--yc-surface);
+  color: var(--yc-text);
+}
+.yc-tree__children {
+  padding: 2px 0 6px;
 }
 .yc-nav__subitem {
   display: flex;

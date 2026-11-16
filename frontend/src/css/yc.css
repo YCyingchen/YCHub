@@ -131,11 +131,13 @@ body.yc-files-mode main.yc-main {
   overflow: hidden;
 }
 
-/* 设置页占满整屏 */
-body.yc-settings-mode {
+/* 设置页 / 分享管理占满整屏 */
+body.yc-settings-mode,
+body.yc-shares-mode {
   padding-top: 0;
 }
-body.yc-settings-mode main.yc-main {
+body.yc-settings-mode main.yc-main,
+body.yc-shares-mode main.yc-main {
   height: 100vh;
   overflow: hidden;
 }
