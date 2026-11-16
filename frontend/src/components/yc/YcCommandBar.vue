@@ -127,6 +127,22 @@
             class="yc-view__check"
           />
         </button>
+
+        <div class="yc-view__sep" />
+
+        <button class="yc-view__item" @click="toggleHidden">
+          <YcIcon name="eye" :size="16" />
+          <span class="yc-view__grow">
+            显示隐藏项目
+            <small>以点开头的文件</small>
+          </span>
+          <YcIcon
+            v-if="showHidden"
+            name="check"
+            :size="14"
+            class="yc-view__check"
+          />
+        </button>
       </div>
     </div>
 
@@ -169,12 +185,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, inject, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useFileStore } from "@/stores/file";
 import { useLayoutStore } from "@/stores/layout";
 import { useAuthStore } from "@/stores/auth";
 import { useYcStore } from "@/stores/yc";
+import { users } from "@/api";
 import YcIcon from "@/components/yc/YcIcon.vue";
 
 const router = useRouter();
@@ -183,6 +200,7 @@ const fileStore = useFileStore();
 const layoutStore = useLayoutStore();
 const authStore = useAuthStore();
 const yc = useYcStore();
+const $showError = inject<IToastError>("$showError")!;
 
 const newOpen = ref(false);
 const viewOpen = ref(false);
@@ -197,6 +215,10 @@ const iconSizes = [
 
 const sizeLabel = computed(
   () => iconSizes.find((size) => size.id === yc.iconSize)?.label ?? "中"
+);
+
+const showHidden = computed(
+  () => authStore.user !== null && authStore.user.hideDotfiles === false
 );
 
 const setView = (mode: "list" | "grid") => {
@@ -214,6 +236,23 @@ const chooseSize = (id: "small" | "medium" | "large") => {
 const toggleSize = () => {
   if (yc.viewMode !== "grid") return;
   sizeOpen.value = !sizeOpen.value;
+};
+
+const toggleHidden = async () => {
+  const user = authStore.user;
+  if (!user) return;
+
+  const hideDotfiles = !user.hideDotfiles;
+  try {
+    await users.update({ id: user.id, hideDotfiles }, ["hideDotfiles"]);
+    authStore.updateUser({ hideDotfiles });
+    fileStore.reload = true;
+  } catch (error) {
+    if (error instanceof Error) $showError(error);
+  }
+
+  viewOpen.value = false;
+  sizeOpen.value = false;
 };
 
 const onDocClick = (event: MouseEvent) => {

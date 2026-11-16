@@ -180,8 +180,8 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 
 .yc-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, var(--yc-grid-w));
-  justify-content: center;
+  grid-template-columns: repeat(auto-fit, var(--yc-grid-w));
+  justify-content: space-evenly;
   gap: var(--yc-grid-gap);
 }
 
@@ -318,9 +318,9 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
 
 @media (max-width: 900px) {
   .yc-grids.is-large {
-    --yc-grid-w: 172px;
-    --yc-grid-h: 236px;
-    --yc-grid-icon: 104px;
+    --yc-grid-w: 160px;
+    --yc-grid-h: 228px;
+    --yc-grid-icon: 100px;
   }
 }
 </style>
