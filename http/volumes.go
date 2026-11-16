@@ -64,6 +64,9 @@ var volumesGetHandler = withUser(func(w http.ResponseWriter, r *http.Request, d 
 	}
 
 	scopeReal := root.RealPath()
+	// When the instance is rooted at "/" the tree is meant to show storage
+	// volumes, not the machine's system directories (/etc, /dev, /proc…).
+	isRootScope := filepath.Clean(scopeReal) == string(filepath.Separator)
 
 	mounts := make(map[string]bool)
 	if parts, perr := disk.Partitions(false); perr == nil {
@@ -116,11 +119,13 @@ var volumesGetHandler = withUser(func(w http.ResponseWriter, r *http.Request, d 
 			continue
 		}
 
-		volumes = append(volumes, VolumeInfo{
-			Name:  name,
-			Path:  "/" + name,
-			Mount: false,
-		})
+		if !isRootScope {
+			volumes = append(volumes, VolumeInfo{
+				Name:  name,
+				Path:  "/" + name,
+				Mount: false,
+			})
+		}
 	}
 
 	sort.SliceStable(volumes, func(i, j int) bool {

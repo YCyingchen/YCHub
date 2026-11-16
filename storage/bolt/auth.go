@@ -24,6 +24,10 @@ func (s authBackend) Get(t settings.AuthMethod) (auth.Auther, error) {
 		auther = &auth.HookAuth{}
 	case auth.MethodNoAuth:
 		auther = &auth.NoAuth{}
+	case auth.MethodSystem:
+		// System auth keeps no configuration of its own; reading the legacy
+		// record is neither needed nor safe, so return it directly.
+		return &auth.SystemAuth{}, nil
 	default:
 		return nil, fberrors.ErrInvalidAuthMethod
 	}

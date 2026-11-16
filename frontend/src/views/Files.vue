@@ -165,7 +165,7 @@ const fetchData = async () => {
   try {
     const res = await api.fetch(url, fetchDataController.signal);
     fileStore.updateRequest(res);
-    document.title = `${res.name || t("sidebar.myFiles")} - ${t("files.files")} - ${name}`;
+    document.title = `${res.name || t("sidebar.myFiles")} - ${t("files.files")} - ${name || "YCHub"}`;
     layoutStore.loading = false;
 
     // Selects the post-reload target item or the previously visited child folder

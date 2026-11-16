@@ -218,7 +218,7 @@ const router = createRouter({
 
 router.beforeResolve(async (to, from) => {
   const title = i18n.global.t(titles[to.name as keyof typeof titles]);
-  document.title = title + " - " + name;
+  document.title = title + " - " + (name || "YCHub");
 
   const authStore = useAuthStore();
 

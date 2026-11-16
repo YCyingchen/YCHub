@@ -3,6 +3,7 @@ module github.com/filebrowser/filebrowser/v2
 go 1.25.0
 
 require (
+	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/asticode/go-astisub v0.42.0
 	github.com/disintegration/imaging v1.6.2
