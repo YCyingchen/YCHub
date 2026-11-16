@@ -25,7 +25,11 @@ export const useAuthStore = defineStore("auth", {
         return;
       }
 
-      setLocale(user.locale || detectLocale());
+      const savedLocale = localStorage.getItem("ychub.locale.v2");
+      const preferred =
+        savedLocale ||
+        (user.locale && user.locale !== "en" ? user.locale : detectLocale());
+      setLocale(preferred, false);
       this.user = user;
     },
     updateUser(user: Partial<IUser>) {

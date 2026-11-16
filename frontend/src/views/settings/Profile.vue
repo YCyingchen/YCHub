@@ -146,7 +146,10 @@ const passwordClass = computed(() => {
 onMounted(async () => {
   layoutStore.loading = true;
   if (authStore.user === null) return false;
-  locale.value = authStore.user.locale;
+  locale.value =
+    localStorage.getItem("ychub.locale.v2") ||
+    document.documentElement.lang ||
+    authStore.user.locale;
   hideDotfiles.value = authStore.user.hideDotfiles;
   singleClick.value = authStore.user.singleClick;
   redirectAfterCopyMove.value = authStore.user.redirectAfterCopyMove;

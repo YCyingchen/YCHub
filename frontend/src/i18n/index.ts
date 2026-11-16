@@ -39,113 +39,12 @@ import("dayjs/locale/zh-tw");
 import messages from "@intlify/unplugin-vue-i18n/messages";
 
 export function detectLocale() {
-  // locale is an RFC 5646 language tag
-  // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/language
-  let locale = navigator.language.toLowerCase();
-  switch (true) {
-    case /^ar\b/.test(locale):
-      locale = "ar";
-      break;
-    case /^bg\b/.test(locale):
-      locale = "bg";
-      break;
-    case /^cs\b/.test(locale):
-      locale = "cs";
-      break;
-    case /^lv\b/.test(locale):
-      locale = "lv";
-      break;
-    case /^he\b/.test(locale):
-      locale = "he";
-      break;
-    case /^hr\b/.test(locale):
-      locale = "hr";
-      break;
-    case /^hu\b/.test(locale):
-      locale = "hu";
-      break;
-    case /^el.*/i.test(locale):
-      locale = "el";
-      break;
-    case /^es\b/.test(locale):
-      locale = "es";
-      break;
-    case /^en\b/.test(locale):
-      locale = "en";
-      break;
-    case /^is\b/.test(locale):
-      locale = "is";
-      break;
-    case /^it\b/.test(locale):
-      locale = "it";
-      break;
-    case /^fr\b/.test(locale):
-      locale = "fr";
-      break;
-    case /^pt-br\b/.test(locale):
-      locale = "pt-br";
-      break;
-    case /^pt-pt\b/.test(locale):
-    case /^pt\b/.test(locale):
-      locale = "pt-pt";
-      break;
-    case /^ja\b/.test(locale):
-      locale = "ja";
-      break;
-    case /^zh-tw\b/.test(locale):
-      locale = "zh-tw";
-      break;
-    case /^zh-cn\b/.test(locale):
-    case /^zh\b/.test(locale):
-      locale = "zh-cn";
-      break;
-    case /^de\b/.test(locale):
-      locale = "de";
-      break;
-    case /^ro\b/.test(locale):
-      locale = "ro";
-      break;
-    case /^ru\b/.test(locale):
-      locale = "ru";
-      break;
-    case /^pl\b/.test(locale):
-      locale = "pl";
-      break;
-    case /^ko\b/.test(locale):
-      locale = "ko";
-      break;
-    case /^sk\b/.test(locale):
-      locale = "sk";
-      break;
-    case /^tr\b/.test(locale):
-      locale = "tr";
-      break;
-    case /^uk\b/.test(locale):
-      locale = "uk";
-      break;
-    case /^vi\b/.test(locale):
-      locale = "vi";
-      break;
-    case /^sv-se\b/.test(locale):
-    case /^sv\b/.test(locale):
-      locale = "sv";
-      break;
-    case /^nl\b/.test(locale):
-      locale = "nl";
-      break;
-    case /^nl-be\b/.test(locale):
-      locale = "nl-be";
-      break;
-    case /^nb\b/.test(locale):
-    case /^no\b/.test(locale):
-      locale = "no";
-      break;
-
-    default:
-      locale = "en";
-  }
-
-  return locale;
+  // YCHub 默认中文；用户手动选择过的语言优先
+  const saved = localStorage.getItem("ychub.locale.v2");
+  if (saved) return saved;
+  return navigator.language.toLowerCase().startsWith("zh-tw")
+    ? "zh-tw"
+    : "zh-cn";
 }
 
 // TODO: was this really necessary?
@@ -177,8 +76,15 @@ export const isRtl = (locale?: string) => {
   return rtlLanguages.includes(locale || i18n.global.locale.value);
 };
 
-export function setLocale(locale: string) {
+export function setLocale(locale: string, persist = true) {
   dayjs.locale(locale);
+  if (persist) {
+    try {
+      localStorage.setItem("ychub.locale.v2", locale);
+    } catch {
+      /* 忽略存储失败 */
+    }
+  }
   // according to doc u only need .value if legacy: false but they lied
   // https://vue-i18n.intlify.dev/guide/essentials/scope.html#local-scope-1
   // @ts-expect-error incorrect type when legacy
