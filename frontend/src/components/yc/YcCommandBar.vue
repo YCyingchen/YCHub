@@ -588,13 +588,18 @@ const newPrompt = (name: string) => {
 
 @media (max-width: 1024px) {
   .yc-commandbar {
-    padding: 0 10px;
+    flex-wrap: wrap;
+    height: auto;
+    padding: 6px 10px;
     gap: 6px;
+    row-gap: 4px;
   }
   .yc-commandbar__menu {
     display: grid;
   }
-  .yc-commandbar__nav,
+  .yc-commandbar__nav {
+    display: flex;
+  }
   .yc-details-toggle,
   .yc-commandbar__upload span,
   .yc-search kbd {
@@ -610,22 +615,52 @@ const newPrompt = (name: string) => {
   .yc-search span {
     display: none;
   }
+  .yc-iconbtn {
+    width: 30px;
+    height: 30px;
+  }
+  .yc-view__trigger {
+    width: auto;
+    padding: 0 4px;
+  }
+  .yc-crumbs {
+    order: 10;
+    flex: 0 0 100%;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .yc-crumbs::-webkit-scrollbar {
+    display: none;
+  }
   .yc-crumbs__item {
-    max-width: 120px;
+    max-width: none;
+    flex: none;
+    padding: 4px 7px;
+    font-size: 12.5px;
+  }
+  .yc-crumbs__sep {
+    flex: none;
   }
 }
 
 @media (max-width: 620px) {
-  .yc-commandbar__upload,
-  [title="刷新"] {
-    display: none;
+  .yc-commandbar {
+    gap: 4px;
+    padding: 6px 8px;
+  }
+  .yc-iconbtn {
+    width: 28px;
+    height: 28px;
   }
   .yc-crumbs__item {
-    max-width: 90px;
-    padding: 5px 4px;
+    padding: 4px 6px;
   }
   .yc-btn {
-    padding: 0 10px;
+    padding: 0 8px;
   }
   .yc-view__menu {
     min-width: 180px;
