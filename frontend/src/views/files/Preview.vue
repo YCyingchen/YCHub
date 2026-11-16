@@ -218,8 +218,8 @@ const size = useStorage("book-size", 120, undefined, {
   },
 });
 
-const locationChange = (epubcifi: number) => {
-  location.value = epubcifi;
+const locationChange = (value: string) => {
+  location.value = Number(value);
 };
 let rendition: Rendition | null = null;
 const changeSize = (val: number) => {

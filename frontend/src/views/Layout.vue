@@ -7,8 +7,8 @@
         }"
       ></div>
     </div>
-    <sidebar></sidebar>
-    <main>
+    <yc-sidebar></yc-sidebar>
+    <main class="yc-main">
       <router-view></router-view>
       <shell
         v-if="
@@ -26,7 +26,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useLayoutStore } from "@/stores/layout";
 import { useFileStore } from "@/stores/file";
 import { useUploadStore } from "@/stores/upload";
-import Sidebar from "@/components/Sidebar.vue";
+import YcSidebar from "@/components/yc/YcSidebar.vue";
 import Prompts from "@/components/prompts/Prompts.vue";
 import Shell from "@/components/Shell.vue";
 import UploadFiles from "@/components/prompts/UploadFiles.vue";

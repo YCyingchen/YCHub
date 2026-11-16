@@ -1,0 +1,232 @@
+/* ==========================================================================
+   YCHub · YC 设计系统
+   与 docs/DESIGN.md 对应：色彩、圆角、间距、字体、对齐规则
+   ========================================================================== */
+
+:root {
+  --yc-accent: #4f6bff;
+  --yc-accent-hover: #4159e8;
+  --yc-accent-soft: #eef1ff;
+  --yc-bg: #f5f6f8;
+  --yc-surface: #ffffff;
+  --yc-surface-2: #fafbfc;
+  --yc-border: #e6e8ec;
+  --yc-border-strong: #d9dce1;
+  --yc-text: #16181d;
+  --yc-text-2: #4a4f57;
+  --yc-muted: #8a9099;
+  --yc-danger: #e5484d;
+  --yc-danger-soft: #fdecec;
+  --yc-success: #46a758;
+  --yc-warning: #f5a524;
+
+  --yc-radius-lg: 16px;
+  --yc-radius: 12px;
+  --yc-radius-sm: 9px;
+  --yc-radius-pill: 999px;
+
+  --yc-sidebar: 240px;
+  --yc-details: 320px;
+  --yc-commandbar: 56px;
+  --yc-statusbar: 28px;
+
+  --yc-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --yc-shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
+  --yc-shadow-lg: 0 16px 40px rgba(16, 24, 40, 0.14);
+
+  --yc-font: "Inter", "Microsoft YaHei", "PingFang SC", "Segoe UI", system-ui,
+    sans-serif;
+
+  /* 文件类型色 */
+  --yc-type-folder: #fff4e5;
+  --yc-type-folder-fg: #b26a00;
+  --yc-type-image: #eef1ff;
+  --yc-type-image-fg: #3b55d9;
+  --yc-type-video: #f3eeff;
+  --yc-type-video-fg: #6d43c8;
+  --yc-type-audio: #eaf8f4;
+  --yc-type-audio-fg: #1f7a5c;
+  --yc-type-doc: #f2f3f5;
+  --yc-type-doc-fg: #5a6270;
+  --yc-type-zip: #fdecec;
+  --yc-type-zip-fg: #b43b3b;
+}
+
+:root.dark {
+  --yc-accent: #6d85ff;
+  --yc-accent-hover: #7f94ff;
+  --yc-accent-soft: rgba(79, 107, 255, 0.18);
+  --yc-bg: #111318;
+  --yc-surface: #191c22;
+  --yc-surface-2: #1f232b;
+  --yc-border: #2a2f3a;
+  --yc-border-strong: #363c49;
+  --yc-text: #e8eaf0;
+  --yc-text-2: #c2c6cf;
+  --yc-muted: #8a9099;
+  --yc-danger: #f0676b;
+  --yc-danger-soft: rgba(229, 72, 77, 0.16);
+
+  --yc-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --yc-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --yc-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
+
+  --yc-type-folder: rgba(245, 165, 36, 0.16);
+  --yc-type-folder-fg: #f0b25a;
+  --yc-type-image: rgba(79, 107, 255, 0.18);
+  --yc-type-image-fg: #8ba1ff;
+  --yc-type-video: rgba(140, 100, 255, 0.18);
+  --yc-type-video-fg: #b39bff;
+  --yc-type-audio: rgba(70, 167, 88, 0.16);
+  --yc-type-audio-fg: #6fcf8a;
+  --yc-type-doc: rgba(255, 255, 255, 0.08);
+  --yc-type-doc-fg: #aab0bb;
+  --yc-type-zip: rgba(229, 72, 77, 0.16);
+  --yc-type-zip-fg: #ff8f92;
+}
+
+body {
+  padding-top: 0;
+  font-family: var(--yc-font);
+  background: var(--yc-bg);
+  color: var(--yc-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 旧版 main 的左边距由 .yc-main 接管 */
+main.yc-main {
+  margin: 0 0 0 var(--yc-sidebar);
+  width: calc(100% - var(--yc-sidebar));
+}
+
+/* 文件页占满整屏，不再为旧版 4em 顶栏留白 */
+body.yc-files-mode {
+  padding-top: 0;
+}
+body.yc-files-mode main.yc-main {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 设置 / 分享等仍在使用旧版顶栏，让它从侧栏右侧开始 */
+main.yc-main > div > header {
+  left: var(--yc-sidebar);
+  width: calc(100% - var(--yc-sidebar));
+  background: var(--yc-surface);
+  border-bottom: 1px solid var(--yc-border);
+  box-shadow: none;
+}
+
+@media (max-width: 1024px) {
+  main.yc-main {
+    margin-left: 0;
+    width: 100%;
+  }
+  main.yc-main > div > header {
+    left: 0;
+    width: 100%;
+  }
+}
+
+/* 滚动条 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--yc-border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--yc-border-strong);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 通用文字 */
+.yc-muted {
+  color: var(--yc-muted);
+}
+
+/* 按钮基类 */
+.yc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--yc-border);
+  border-radius: var(--yc-radius-sm);
+  background: var(--yc-surface);
+  color: var(--yc-text);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+.yc-btn:hover {
+  background: var(--yc-surface-2);
+  border-color: var(--yc-border-strong);
+}
+.yc-btn--primary {
+  background: var(--yc-accent);
+  border-color: var(--yc-accent);
+  color: #fff;
+}
+.yc-btn--primary:hover {
+  background: var(--yc-accent-hover);
+  border-color: var(--yc-accent-hover);
+}
+.yc-btn--ghost {
+  background: transparent;
+  border-color: transparent;
+}
+.yc-btn--ghost:hover {
+  background: var(--yc-accent-soft);
+  border-color: transparent;
+  color: var(--yc-accent);
+}
+.yc-btn--icon {
+  width: 34px;
+  padding: 0;
+}
+.yc-btn--danger {
+  color: var(--yc-danger);
+}
+.yc-btn--danger:hover {
+  background: var(--yc-danger-soft);
+  border-color: transparent;
+}
+.yc-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 选中态底色统一 */
+::selection {
+  background: var(--yc-accent-soft);
+  color: var(--yc-accent);
+}
+
+/* 让旧组件的圆角与控制色跟随 YC */
+:root {
+  --blue: var(--yc-accent);
+  --dark-blue: var(--yc-accent-hover);
+  --red: var(--yc-danger);
+  --dark-red: var(--yc-danger);
+  --background: var(--yc-bg);
+  --surfacePrimary: var(--yc-surface);
+  --surfaceSecondary: var(--yc-surface-2);
+  --textPrimary: var(--yc-text-2);
+  --textSecondary: var(--yc-text);
+  --divider: var(--yc-border);
+  --action: var(--yc-text-2);
+  --hover: rgba(79, 107, 255, 0.08);
+  --borderPrimary: var(--yc-border);
+  --borderSecondary: var(--yc-border-strong);
+  --iconPrimary: var(--yc-accent);
+}

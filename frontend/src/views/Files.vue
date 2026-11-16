@@ -1,12 +1,13 @@
 <template>
   <div>
-    <header-bar
-      v-if="error || fileStore.req?.type === undefined"
-      showMenu
-      showLogo
-    />
-
-    <breadcrumbs base="/files" />
+    <template v-if="!isYcListing">
+      <header-bar
+        v-if="error || fileStore.req?.type === undefined"
+        showMenu
+        showLogo
+      />
+      <breadcrumbs base="/files" />
+    </template>
     <errors v-if="error" :errorCode="error.status" />
     <component v-else-if="currentView" :is="currentView"></component>
     <div v-else>
@@ -42,7 +43,7 @@ import Breadcrumbs from "@/components/Breadcrumbs.vue";
 import Errors from "@/views/Errors.vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
-import FileListing from "@/views/files/FileListing.vue";
+import YcFileListing from "@/views/files/YcFileListing.vue";
 import { StatusError } from "@/api/utils";
 import { name } from "../utils/constants";
 
@@ -62,13 +63,17 @@ let fetchDataController = new AbortController();
 
 const error = ref<StatusError | null>(null);
 
+const isYcListing = computed(
+  () => !error.value && fileStore.req?.isDir === true
+);
+
 const currentView = computed(() => {
   if (fileStore.req?.type === undefined) {
     return null;
   }
 
   if (fileStore.req.isDir) {
-    return FileListing;
+    return YcFileListing;
   } else if (fileStore.req.extension.toLowerCase() === ".csv") {
     // CSV files use Preview for table view, unless ?edit=true
     if (route.query.edit === "true") {
