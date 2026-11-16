@@ -23,7 +23,13 @@
           @keydown.enter="$emit('open', item)"
           @contextmenu.prevent="onContext(item, $event)"
         >
-          <span class="yc-card__icon" :class="`is-${typeOf(item).kind}`">
+          <span
+            class="yc-card__icon"
+            :class="[
+              `is-${typeOf(item).kind}`,
+              { 'has-thumb': !!thumbOf(item) },
+            ]"
+          >
             <img
               v-if="thumbOf(item)"
               :src="thumbOf(item) || ''"
@@ -255,6 +261,12 @@ const onContext = (item: ResourceItem, event: MouseEvent) => {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+/* 图片 / 视频缩略图占满卡片宽度，普通图标保持原尺寸 */
+.yc-card__icon.has-thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
 }
 .yc-card__icon.is-folder {
   background: var(--yc-type-folder);
