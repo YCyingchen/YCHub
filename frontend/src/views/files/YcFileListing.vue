@@ -68,24 +68,36 @@
             @reorder="onReorder"
           />
           <div v-else-if="yc.viewMode === 'dual'" class="yc-dual">
-            <div class="yc-dual__pane">
-              <YcFileList
-                :items="items"
-                :selected="fileStore.selected"
-                :sorting="sorting"
-                :grouped="yc.grouped"
-                @open="open"
-                @context="openMenu"
-                @sort="sort"
-                @reorder="onReorder"
-              />
-            </div>
-            <div class="yc-dual__pane">
-              <YcPane path="/" />
-            </div>
+            <YcPane
+              class="yc-dual__pane"
+              :path="route.path"
+              :items="items"
+              :selected="fileStore.selected"
+              controlled
+              external-navigation
+              @select="onPaneSelect"
+              @open="open"
+              @context="openMenu"
+              @navigate="navigateMain"
+              @drop-files="onDropFiles"
+            />
+            <YcPane
+              class="yc-dual__pane"
+              :path="rightPath"
+              @open="open"
+              @drop-files="onDropFiles"
+            />
           </div>
           <div v-else class="yc-columns">
-            <YcPane v-for="path in columnPaths" :key="path" :path="path" />
+            <YcPane
+              v-for="(path, index) in columns"
+              :key="path + index"
+              :path="path"
+              external-navigation
+              @navigate="(target) => onColumnNavigate(index, target)"
+              @open="open"
+              @drop-files="onDropFiles"
+            />
           </div>
         </template>
 
@@ -318,6 +330,54 @@ const columnPaths = computed(() => {
   return paths;
 });
 
+const rightPath = ref("/");
+const columns = ref<string[]>(columnPaths.value);
+
+watch(
+  () => route.path,
+  () => {
+    columns.value = columnPaths.value;
+  }
+);
+
+const normalizePath = (path: string) => {
+  let value = path || "/";
+  if (!value.startsWith("/")) value = "/" + value;
+  value = value.replace(/\/+$/, "");
+  return value || "/";
+};
+
+const navigateMain = (path: string) => {
+  const target = normalizePath(path);
+  router.push("/files" + (target === "/" ? "/" : target));
+};
+
+const onPaneSelect = (index: number, event: MouseEvent) => {
+  if (index < 0) {
+    fileStore.selected = [];
+    return;
+  }
+  if (event.ctrlKey || event.metaKey) {
+    if (fileStore.selected.includes(index)) {
+      fileStore.removeSelected(index);
+    } else {
+      fileStore.selected.push(index);
+    }
+    return;
+  }
+  fileStore.selected = [index];
+};
+
+const onDropFiles = () => {
+  fileStore.reload = true;
+};
+
+const onColumnNavigate = (index: number, path: string) => {
+  const target = normalizePath(path);
+  columns.value = [...columns.value.slice(0, index + 1), target];
+  navigateMain(target);
+};
+
 const canCreate = computed(() => authStore.user?.perm?.create === true);
 const canDownload = computed(() => authStore.user?.perm?.download === true);
 const canRename = computed(() => authStore.user?.perm?.rename === true);
@@ -356,7 +416,7 @@ const openBlankMenu = (event: MouseEvent) => {
 
 const isItemTarget = (event: Event) => {
   const el = event.target as HTMLElement | null;
-  return !!el?.closest(".yc-card, .yc-row");
+  return !!el?.closest(".yc-card, .yc-row, .yc-pane__row");
 };
 
 const onListingClick = (event: MouseEvent) => {
@@ -433,7 +493,7 @@ const onPointerDown = (event: PointerEvent) => {
   const target = event.target as HTMLElement | null;
   if (
     target?.closest(
-      ".yc-card, .yc-row, button, a, input, .yc-group__title, .yc-menu"
+      ".yc-card, .yc-row, .yc-pane__row, button, a, input, .yc-group__title, .yc-menu"
     )
   ) {
     return;
@@ -747,7 +807,7 @@ watch(
 .yc-dual__pane {
   flex: 1;
   min-width: 0;
-  overflow: auto;
+  overflow: hidden;
 }
 .yc-dual__pane + .yc-dual__pane {
   border-left: 1px solid var(--yc-border);
