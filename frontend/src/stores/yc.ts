@@ -54,7 +54,12 @@ function load(): Persisted {
     return {
       favorites: Array.isArray(data.favorites) ? data.favorites : [],
       recent: Array.isArray(data.recent) ? data.recent : [],
-      viewMode: data.viewMode === "grid" ? "grid" : "list",
+      viewMode:
+        data.viewMode === "grid" ||
+        data.viewMode === "dual" ||
+        data.viewMode === "columns"
+          ? data.viewMode
+          : "list",
       detailsOpen: data.detailsOpen !== false,
       accent: typeof data.accent === "string" ? data.accent : DEFAULT_ACCENT,
       density:

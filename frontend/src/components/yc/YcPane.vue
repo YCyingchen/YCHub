@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="paneEl"
     class="yc-pane"
     :class="{ 'is-active': active }"
     @dragover.prevent="onDragOverZone($event)"
@@ -27,7 +28,7 @@
       <span class="yc-pane__col-time">修改时间</span>
     </div>
 
-    <div class="yc-pane__list" @click.self="clearSelection">
+    <div class="yc-pane__list" @pointerdown="onBandStart" @click.self="clearSelection">
       <p v-if="loading" class="yc-pane__hint">加载中…</p>
       <p v-else-if="displayItems.length === 0" class="yc-pane__hint">
         空文件夹
@@ -58,11 +59,13 @@
         <span class="yc-pane__time">{{ timeOf(item.modified) }}</span>
       </div>
     </div>
+
+    <div v-if="band.visible" class="yc-band" :style="bandStyle" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, watch } from "vue";
+import { computed, inject, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { files as api } from "@/api";
 import { filesize } from "@/utils";
@@ -95,6 +98,7 @@ const emit = defineEmits<{
   (e: "navigate", path: string): void;
   (e: "dropFiles"): void;
   (e: "activate"): void;
+  (e: "selectMany", indexes: number[]): void;
 }>();
 
 const $showSuccess = inject<(message: string) => void>("$showSuccess")!;
@@ -114,6 +118,7 @@ const currentPath = ref(normalize(props.path));
 const ownItems = ref<ResourceItem[]>([]);
 const loading = ref(false);
 const ownSelected = ref<number[]>([]);
+const paneEl = ref<HTMLElement | null>(null);
 
 const displayItems = computed(() =>
   props.controlled && props.items ? props.items : ownItems.value
@@ -129,11 +134,115 @@ const isSelected = (item: ResourceItem) => {
 };
 
 const clearSelection = () => {
+  if (ignoreClick) {
+    ignoreClick = false;
+    return;
+  }
   if (props.controlled) {
     emit("select", -1, new MouseEvent("click"));
     return;
   }
   ownSelected.value = [];
+};
+
+const band = reactive({
+  visible: false,
+  startX: 0,
+  startY: 0,
+  x: 0,
+  y: 0,
+  w: 0,
+  h: 0,
+});
+let bandMoved = false;
+let ignoreClick = false;
+let bandAdditive = false;
+let bandBase: number[] = [];
+
+const bandStyle = computed(() => ({
+  left: `${band.x}px`,
+  top: `${band.y}px`,
+  width: `${band.w}px`,
+  height: `${band.h}px`,
+}));
+
+const selectionNow = () =>
+  props.controlled ? props.selected ?? [] : ownSelected.value;
+
+const applyBandSelection = (indexes: number[]) => {
+  if (props.controlled) emit("selectMany", indexes);
+  else ownSelected.value = indexes;
+};
+
+const onBandMove = (event: PointerEvent) => {
+  const dx = event.clientX - band.startX;
+  const dy = event.clientY - band.startY;
+
+  if (!bandMoved && Math.hypot(dx, dy) < 4) return;
+  bandMoved = true;
+  band.visible = true;
+  band.x = Math.min(event.clientX, band.startX);
+  band.y = Math.min(event.clientY, band.startY);
+  band.w = Math.abs(dx);
+  band.h = Math.abs(dy);
+
+  const hits: number[] = [];
+  paneEl.value
+    ?.querySelectorAll<HTMLElement>(".yc-pane__row[data-index]")
+    .forEach((element) => {
+      const rect = element.getBoundingClientRect();
+      const intersects =
+        rect.right > band.x &&
+        rect.left < band.x + band.w &&
+        rect.bottom > band.y &&
+        rect.top < band.y + band.h;
+      if (!intersects) return;
+      const index = Number(element.dataset.index);
+      if (!Number.isNaN(index)) hits.push(index);
+    });
+
+  if (bandAdditive) {
+    const merged = [...bandBase];
+    for (const index of hits) {
+      if (!merged.includes(index)) merged.push(index);
+    }
+    applyBandSelection(merged);
+  } else {
+    applyBandSelection(hits);
+  }
+};
+
+const onBandUp = () => {
+  window.removeEventListener("pointermove", onBandMove);
+  band.visible = false;
+  if (bandMoved) ignoreClick = true;
+};
+
+const onBandStart = (event: PointerEvent) => {
+  if (event.button !== 0 || window.innerWidth <= 900) return;
+
+  const target = event.target as HTMLElement | null;
+  if (
+    target?.closest(
+      ".yc-pane__row, .yc-pane__bar, .yc-pane__head, button, a, input"
+    )
+  ) {
+    return;
+  }
+
+  bandMoved = false;
+  band.visible = false;
+  band.startX = event.clientX;
+  band.startY = event.clientY;
+  band.x = event.clientX;
+  band.y = event.clientY;
+  band.w = 0;
+  band.h = 0;
+  bandAdditive = event.ctrlKey || event.metaKey || event.shiftKey;
+  bandBase = bandAdditive ? [...selectionNow()] : [];
+
+  window.addEventListener("pointermove", onBandMove);
+  window.addEventListener("pointerup", onBandUp, { once: true });
 };
 
 const load = async () => {
@@ -171,6 +280,16 @@ watch(currentPath, () => {
 
 if (!props.controlled) load();
 
+const rangeSelect = (anchorIndex: number, index: number) => {
+  const list = displayItems.value;
+  const from = list.findIndex((item) => item.index === anchorIndex);
+  const to = list.findIndex((item) => item.index === index);
+  if (from < 0 || to < 0) return [index];
+  const start = Math.min(from, to);
+  const end = Math.max(from, to);
+  return list.slice(start, end + 1).map((item) => item.index);
+};
+
 const onClick = (item: ResourceItem, event: MouseEvent) => {
   if (props.controlled) {
     emit("select", item.index, event);
@@ -180,6 +299,10 @@ const onClick = (item: ResourceItem, event: MouseEvent) => {
     const index = ownSelected.value.indexOf(item.index);
     if (index === -1) ownSelected.value.push(item.index);
     else ownSelected.value.splice(index, 1);
+    return;
+  }
+  if (event.shiftKey && ownSelected.value.length > 0) {
+    ownSelected.value = rangeSelect(ownSelected.value[0], item.index);
     return;
   }
   ownSelected.value = [item.index];
@@ -224,12 +347,13 @@ const cleanupGhost = () => {
   ghostEl = null;
 };
 
-const buildGhost = (item: ResourceItem, event: DragEvent) => {
+const buildGhost = (files: ResourceItem[], event: DragEvent) => {
   cleanupGhost();
 
   const row = event.currentTarget as HTMLElement | null;
   const wrap = document.createElement("div");
   wrap.className = "yc-drag-ghost";
+  wrap.dataset.count = String(files.length);
   wrap.style.cssText =
     "position:fixed;top:-1000px;left:-1000px;display:flex;align-items:center;" +
     "gap:10px;padding:8px 12px;background:#fff;border:1px solid #e6e8ec;" +
@@ -252,15 +376,17 @@ const buildGhost = (item: ResourceItem, event: DragEvent) => {
     "display:flex;flex-direction:column;gap:2px;min-width:0;";
 
   const name = document.createElement("span");
-  name.textContent = item.name;
+  name.textContent =
+    files.length > 1
+      ? `${files[0].name} 等 ${files.length} 项`
+      : files[0].name;
   name.style.cssText =
     "font-size:12.5px;color:#16181D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
 
   const sub = document.createElement("span");
   sub.dataset.role = "sub";
-  sub.textContent = `${event.shiftKey ? "移动" : "复制"} 1 个${
-    item.isDir ? "文件夹" : "文件"
-  }`;
+  const kind = files.every((file) => file.isDir) ? "文件夹" : "文件";
+  sub.textContent = `${event.shiftKey ? "移动" : "复制"} ${files.length} 个${kind}`;
   sub.style.cssText = "font-size:10.5px;color:#8A9099;white-space:nowrap;";
 
   text.append(name, sub);
@@ -271,10 +397,15 @@ const buildGhost = (item: ResourceItem, event: DragEvent) => {
 };
 
 const updateGhost = (targetPath: string, move: boolean) => {
-  const ghost = document.querySelector(".yc-drag-ghost");
+  const ghost = document.querySelector(".yc-drag-ghost") as HTMLElement | null;
   if (!ghost) return;
   const sub = ghost.querySelector('[data-role="sub"]') as HTMLElement | null;
-  if (sub) sub.textContent = `${move ? "移动" : "复制"}到 ${targetLabel(targetPath)}`;
+  if (sub) {
+    const count = Number(ghost.dataset.count ?? "1");
+    sub.textContent = `${move ? "移动" : "复制"} ${count} 项到 ${targetLabel(
+      targetPath
+    )}`;
+  }
 };
 
 const onDragOverRow = (item: ResourceItem, event: DragEvent) => {
@@ -296,76 +427,103 @@ const onDragOverZone = (event: DragEvent) => {
   }
 };
 
+const activeSelection = () =>
+  props.controlled ? props.selected ?? [] : ownSelected.value;
+
 const onDragStart = (item: ResourceItem, event: DragEvent) => {
   if (!event.dataTransfer) return;
+
+  const selected = activeSelection();
+  const files =
+    selected.includes(item.index) && selected.length > 1
+      ? displayItems.value.filter((row) => selected.includes(row.index))
+      : [item];
+
   event.dataTransfer.setData(
     "application/x-yc-file",
-    JSON.stringify({
-      name: item.name,
-      isDir: item.isDir,
-      url: item.url,
-      path: item.path,
-      size: item.size,
-      modified: item.modified,
-    })
+    JSON.stringify(
+      files.map((file) => ({
+        name: file.name,
+        isDir: file.isDir,
+        url: file.url,
+        path: file.path,
+        size: file.size,
+        modified: file.modified,
+      }))
+    )
   );
   event.dataTransfer.effectAllowed = "copyMove";
 
-  const ghost = buildGhost(item, event);
+  const ghost = buildGhost(files, event);
   event.dataTransfer.setDragImage(ghost, 18, 18);
 };
+
+interface DragFile {
+  name: string;
+  isDir: boolean;
+  url: string;
+  path: string;
+  size: number;
+  modified: string;
+}
 
 const handleDrop = async (event: DragEvent, targetPath: string) => {
   const raw = event.dataTransfer?.getData("application/x-yc-file");
   if (!raw) return;
   event.preventDefault();
 
-  let data: {
-    name: string;
-    isDir: boolean;
-    url: string;
-    path: string;
-    size: number;
-    modified: string;
-  };
+  let parsed: DragFile[] | DragFile;
   try {
-    data = JSON.parse(raw);
+    parsed = JSON.parse(raw);
   } catch {
     return;
   }
 
-  const target = normalize(targetPath);
-  if (!data.path || !data.name) return;
-  if (target === normalize(data.path)) return;
-  if (target.startsWith(normalize(data.path) + "/")) return;
+  const files = (Array.isArray(parsed) ? parsed : [parsed]).filter(
+    (file) => file && file.name && file.path && file.url
+  );
+  if (files.length === 0) return;
 
-  const destination =
-    "/files" +
-    (target === "/" ? "" : target) +
-    "/" +
-    encodeURIComponent(data.name);
+  const target = normalize(targetPath);
+  const movable = files.filter((file) => {
+    const source = normalize(file.path);
+    if (target === source) return false;
+    if (target.startsWith(source + "/")) return false;
+    return true;
+  });
+  if (movable.length === 0) {
+    cleanupGhost();
+    return;
+  }
+
   const move = event.shiftKey;
   const action = move ? api.move : api.copy;
   const keepPath = currentPath.value;
 
   try {
     await action(
-      [
-        {
-          from: data.url,
-          to: destination,
-          name: data.name,
-          size: data.size ?? 0,
-          isDir: data.isDir,
-          modified: data.modified ?? "",
-          overwrite: false,
-          rename: false,
-        },
-      ],
+      movable.map((file) => ({
+        from: file.url,
+        to:
+          "/files" +
+          (target === "/" ? "" : target) +
+          "/" +
+          encodeURIComponent(file.name),
+        name: file.name,
+        size: file.size ?? 0,
+        isDir: file.isDir,
+        modified: file.modified ?? "",
+        overwrite: false,
+        rename: false,
+      })),
       false,
       false
     );
-    $showSuccess(move ? "已移动到当前目录" : "已复制到当前目录");
+    $showSuccess(
+      `${move ? "已移动" : "已复制"} ${movable.length} 项到 ${targetLabel(
+        target
+      )}`
+    );
     currentPath.value = keepPath;
     if (!props.controlled) await load();
     emit("dropFiles");
@@ -484,6 +642,14 @@ const onDropZone = (event: DragEvent) => {
   text-align: center;
   font-size: 12px;
   color: var(--yc-muted);
+}
+.yc-band {
+  position: fixed;
+  z-index: 900;
+  border: 1px solid var(--yc-accent);
+  background: rgba(79, 107, 255, 0.12);
+  border-radius: 2px;
+  pointer-events: none;
 }
 .yc-pane__row {
   display: flex;

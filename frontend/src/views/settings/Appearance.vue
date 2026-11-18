@@ -142,6 +142,31 @@
       />
     </section>
 
+    <section class="yc-panel">
+      <div class="yc-panel__head">
+        <h2>多选与拖拽</h2>
+        <p>主列表、双栏的左栏 / 右栏以及多栏视图都支持同样的操作</p>
+      </div>
+      <ul class="yc-shortcuts">
+        <li>
+          <kbd>Ctrl</kbd><span class="yc-shortcuts__or">或</span><kbd>⌘</kbd>
+          <span>单击文件，逐个添加或取消选择</span>
+        </li>
+        <li>
+          <kbd>Shift</kbd>
+          <span>单击文件，连续选择一段范围</span>
+        </li>
+        <li>
+          <kbd>拖拽</kbd>
+          <span>把选中的文件复制到目标文件夹，拖拽浮层会显示数量</span>
+        </li>
+        <li>
+          <kbd>Shift</kbd><span class="yc-shortcuts__or">+</span><kbd>拖拽</kbd>
+          <span>改为移动选中的文件</span>
+        </li>
+      </ul>
+    </section>
+
     <p class="yc-appearance__note">
       外观设置保存在这台设备上，不会同步到其他设备。
     </p>
@@ -482,6 +507,42 @@ const onFile = (event: Event) => {
 }
 .yc-hidden-input {
   display: none;
+}
+
+.yc-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.yc-shortcuts li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 26px;
+  font-size: 12px;
+  color: var(--yc-text-2);
+}
+.yc-shortcuts kbd {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--yc-border-strong);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: var(--yc-surface-2);
+  color: var(--yc-text);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.yc-shortcuts__or {
+  color: var(--yc-muted);
+  font-size: 11px;
 }
 
 .yc-appearance__note {

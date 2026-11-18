@@ -78,6 +78,7 @@
               :active="activePane === 'left'"
               @activate="activePane = 'left'"
               @select="onPaneSelect"
+              @select-many="onPaneSelectMany"
               @open="open"
               @context="openMenu"
               @navigate="navigateMain"
@@ -379,7 +380,25 @@ const onPaneSelect = (index: number, event: MouseEvent) => {
     }
     return;
   }
+  if (event.shiftKey && fileStore.selected.length > 0) {
+    const list = items.value;
+    const anchor = fileStore.selected[0];
+    const from = list.findIndex((item) => item.index === anchor);
+    const to = list.findIndex((item) => item.index === index);
+    if (from >= 0 && to >= 0) {
+      const start = Math.min(from, to);
+      const end = Math.max(from, to);
+      fileStore.selected = list
+        .slice(start, end + 1)
+        .map((item) => item.index);
+      return;
+    }
+  }
   fileStore.selected = [index];
+};
+
+const onPaneSelectMany = (indexes: number[]) => {
+  fileStore.selected = indexes;
 };
 
 const onDropFiles = () => {
@@ -507,7 +526,7 @@ const onPointerDown = (event: PointerEvent) => {
   const target = event.target as HTMLElement | null;
   if (
     target?.closest(
-      ".yc-card, .yc-row, .yc-pane__row, button, a, input, .yc-group__title, .yc-menu"
+      ".yc-pane, .yc-card, .yc-row, .yc-pane__row, button, a, input, .yc-group__title, .yc-menu"
     )
   ) {
     return;
