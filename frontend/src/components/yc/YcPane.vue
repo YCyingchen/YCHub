@@ -2,7 +2,7 @@
   <div
     class="yc-pane"
     :class="{ 'is-active': active }"
-    @dragover.prevent
+    @dragover.prevent="onDragOverZone($event)"
     @drop="onDropZone($event)"
     @pointerdown.capture="emit('activate')"
   >
@@ -41,7 +41,8 @@
         :data-index="item.index"
         draggable="true"
         @dragstart="onDragStart(item, $event)"
-        @dragover.prevent
+        @dragend="cleanupGhost"
+        @dragover.stop.prevent="onDragOverRow(item, $event)"
         @drop.stop="onDropItem(item, $event)"
         @click="onClick(item, $event)"
         @dblclick="openItem(item)"
@@ -209,6 +210,92 @@ const goUp = () => {
   else currentPath.value = target || "/";
 };
 
+let ghostEl: HTMLElement | null = null;
+
+const targetLabel = (path: string) => {
+  const clean = normalize(path);
+  if (clean === "/") return "根目录";
+  const parts = clean.split("/").filter(Boolean);
+  return parts[parts.length - 1] || "根目录";
+};
+
+const cleanupGhost = () => {
+  document.querySelectorAll(".yc-drag-ghost").forEach((el) => el.remove());
+  ghostEl = null;
+};
+
+const buildGhost = (item: ResourceItem, event: DragEvent) => {
+  cleanupGhost();
+
+  const row = event.currentTarget as HTMLElement | null;
+  const wrap = document.createElement("div");
+  wrap.className = "yc-drag-ghost";
+  wrap.style.cssText =
+    "position:fixed;top:-1000px;left:-1000px;display:flex;align-items:center;" +
+    "gap:10px;padding:8px 12px;background:#fff;border:1px solid #e6e8ec;" +
+    "border-radius:10px;box-shadow:0 8px 24px rgba(16,24,40,.18);" +
+    "font-family:inherit;z-index:99999;pointer-events:none;max-width:280px;";
+
+  const icon = row?.querySelector(".yc-pane__icon")?.cloneNode(true) as
+    | HTMLElement
+    | null;
+  if (icon) {
+    icon.style.width = "34px";
+    icon.style.height = "34px";
+    icon.style.borderRadius = "9px";
+    icon.style.flex = "none";
+    wrap.appendChild(icon);
+  }
+
+  const text = document.createElement("div");
+  text.style.cssText =
+    "display:flex;flex-direction:column;gap:2px;min-width:0;";
+
+  const name = document.createElement("span");
+  name.textContent = item.name;
+  name.style.cssText =
+    "font-size:12.5px;color:#16181D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
+
+  const sub = document.createElement("span");
+  sub.dataset.role = "sub";
+  sub.textContent = `${event.shiftKey ? "移动" : "复制"} 1 个${
+    item.isDir ? "文件夹" : "文件"
+  }`;
+  sub.style.cssText = "font-size:10.5px;color:#8A9099;white-space:nowrap;";
+
+  text.append(name, sub);
+  wrap.appendChild(text);
+  document.body.appendChild(wrap);
+  ghostEl = wrap;
+  return wrap;
+};
+
+const updateGhost = (targetPath: string, move: boolean) => {
+  const ghost = document.querySelector(".yc-drag-ghost");
+  if (!ghost) return;
+  const sub = ghost.querySelector('[data-role="sub"]') as HTMLElement | null;
+  if (sub) sub.textContent = `${move ? "移动" : "复制"}到 ${targetLabel(targetPath)}`;
+};
+
+const onDragOverRow = (item: ResourceItem, event: DragEvent) => {
+  const ghost = document.querySelector(".yc-drag-ghost") as HTMLElement | null;
+  if (!ghost) return;
+  const target = item.isDir ? item.path : currentPath.value;
+  updateGhost(target, event.shiftKey);
+  if (event.dataTransfer) {
+    event.dataTransfer.setDragImage(ghost, 18, 18);
+  }
+};
+
+const onDragOverZone = (event: DragEvent) => {
+  const ghost = document.querySelector(".yc-drag-ghost") as HTMLElement | null;
+  if (!ghost) return;
+  updateGhost(currentPath.value, event.shiftKey);
+  if (event.dataTransfer) {
+    event.dataTransfer.setDragImage(ghost, 18, 18);
+  }
+};
+
 const onDragStart = (item: ResourceItem, event: DragEvent) => {
   if (!event.dataTransfer) return;
   event.dataTransfer.setData(
@@ -223,8 +310,9 @@ const onDragStart = (item: ResourceItem, event: DragEvent) => {
     })
   );
   event.dataTransfer.effectAllowed = "copyMove";
-  const row = event.currentTarget as HTMLElement | null;
-  if (row) event.dataTransfer.setDragImage(row, 18, 18);
+
+  const ghost = buildGhost(item, event);
+  event.dataTransfer.setDragImage(ghost, 18, 18);
 };
 
 const handleDrop = async (event: DragEvent, targetPath: string) => {
@@ -283,6 +371,8 @@ const handleDrop = async (event: DragEvent, targetPath: string) => {
     emit("dropFiles");
   } catch (error) {
     if (error instanceof Error) $showError(error);
+  } finally {
+    cleanupGhost();
   }
 };
 
@@ -301,15 +391,21 @@ const onDropZone = (event: DragEvent) => {
 
 <style scoped>
 .yc-pane {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
   height: 100%;
   background: var(--yc-surface);
-  transition: box-shadow 0.15s ease;
 }
-.yc-pane.is-active {
-  box-shadow: inset 0 0 0 2px var(--yc-accent);
+.yc-pane.is-active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--yc-accent);
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 20;
 }
 .yc-pane__bar {
   flex: none;
