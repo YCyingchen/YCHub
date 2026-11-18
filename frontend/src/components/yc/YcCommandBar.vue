@@ -294,7 +294,7 @@
           />
         </button>
         <button
-          class="yc-view__item"
+          class="yc-view__item yc-view__columns-item"
           :class="{ 'is-active': yc.viewMode === 'columns' }"
           @click="setView('columns')"
         >
@@ -662,12 +662,21 @@ const onEsc = (event: KeyboardEvent) => {
   sizeOpen.value = false;
 };
 
+const ensureMobileView = () => {
+  if (window.innerWidth <= 900 && yc.viewMode === "columns") {
+    yc.setViewMode("list");
+  }
+};
+
 onMounted(() => {
+  ensureMobileView();
+  window.addEventListener("resize", ensureMobileView);
   document.addEventListener("click", onDocClick, true);
   window.addEventListener("keydown", onEsc);
 });
 
 onBeforeUnmount(() => {
+  window.removeEventListener("resize", ensureMobileView);
   document.removeEventListener("click", onDocClick, true);
   window.removeEventListener("keydown", onEsc);
 });
@@ -1232,6 +1241,15 @@ const newPrompt = (name: string) => {
   font-size: 11px;
   color: var(--yc-muted);
   margin-left: 2px;
+}
+
+@media (max-width: 1024px) {
+  .yc-view__columns-item {
+    display: none;
+  }
+  .yc-mobile-view {
+    display: grid;
+  }
 }
 
 @media (min-width: 1025px) {

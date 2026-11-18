@@ -555,4 +555,37 @@ const onDropZone = (event: DragEvent) => {
   color: var(--yc-muted);
   white-space: nowrap;
 }
+
+@media (max-width: 900px) {
+  .yc-pane__head {
+    display: none;
+  }
+  .yc-pane__size,
+  .yc-pane__time {
+    display: none;
+  }
+  .yc-pane__bar {
+    padding: 0 4px;
+    gap: 4px;
+  }
+  .yc-pane__path {
+    font-size: 10.5px;
+  }
+  .yc-pane__count {
+    font-size: 9.5px;
+  }
+  .yc-pane__row {
+    height: 44px;
+    gap: 6px;
+    padding: 0 4px;
+  }
+  .yc-pane__icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+  }
+  .yc-pane__name {
+    font-size: 11.5px;
+  }
+}
 </style>

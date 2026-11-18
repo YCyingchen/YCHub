@@ -815,11 +815,12 @@ watch(
 
 .yc-dual {
   display: flex;
+  flex-direction: row;
   height: 100%;
   min-height: 0;
 }
 .yc-dual__pane {
-  flex: 1;
+  flex: 1 1 50%;
   min-width: 0;
   overflow: hidden;
 }
