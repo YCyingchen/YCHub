@@ -193,6 +193,8 @@ const onDragStart = (item: ResourceItem, event: DragEvent) => {
   if (!event.dataTransfer) return;
   event.dataTransfer.setData("text/yc-reorder", item.name);
   event.dataTransfer.effectAllowed = "move";
+  const row = event.currentTarget as HTMLElement | null;
+  if (row) event.dataTransfer.setDragImage(row, 18, 18);
 };
 
 const onDrop = (item: ResourceItem, event: DragEvent) => {
@@ -286,6 +288,8 @@ const onDrop = (item: ResourceItem, event: DragEvent) => {
   cursor: default;
   position: relative;
   transition: background 0.12s ease;
+  user-select: none;
+  -webkit-user-drag: element;
 }
 .yc-row:last-child {
   border-bottom: 0;

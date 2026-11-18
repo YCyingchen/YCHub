@@ -1,8 +1,10 @@
 <template>
   <div
     class="yc-pane"
+    :class="{ 'is-active': active }"
     @dragover.prevent
     @drop="onDropZone($event)"
+    @pointerdown.capture="emit('activate')"
   >
     <div class="yc-pane__bar">
       <button
@@ -74,12 +76,14 @@ const props = withDefaults(
     selected?: number[];
     controlled?: boolean;
     externalNavigation?: boolean;
+    active?: boolean;
   }>(),
   {
     items: undefined,
     selected: undefined,
     controlled: false,
     externalNavigation: false,
+    active: false,
   }
 );
 
@@ -89,6 +93,7 @@ const emit = defineEmits<{
   (e: "context", item: ResourceItem, event: MouseEvent): void;
   (e: "navigate", path: string): void;
   (e: "dropFiles"): void;
+  (e: "activate"): void;
 }>();
 
 const $showSuccess = inject<(message: string) => void>("$showSuccess")!;
@@ -218,6 +223,8 @@ const onDragStart = (item: ResourceItem, event: DragEvent) => {
     })
   );
   event.dataTransfer.effectAllowed = "copyMove";
+  const row = event.currentTarget as HTMLElement | null;
+  if (row) event.dataTransfer.setDragImage(row, 18, 18);
 };
 
 const handleDrop = async (event: DragEvent, targetPath: string) => {
@@ -251,6 +258,7 @@ const handleDrop = async (event: DragEvent, targetPath: string) => {
     encodeURIComponent(data.name);
   const move = event.shiftKey;
   const action = move ? api.move : api.copy;
+  const keepPath = currentPath.value;
 
   try {
     await action(
@@ -270,8 +278,9 @@ const handleDrop = async (event: DragEvent, targetPath: string) => {
       false
     );
     $showSuccess(move ? "已移动到当前目录" : "已复制到当前目录");
-    emit("dropFiles");
+    currentPath.value = keepPath;
     if (!props.controlled) await load();
+    emit("dropFiles");
   } catch (error) {
     if (error instanceof Error) $showError(error);
   }
@@ -297,6 +306,10 @@ const onDropZone = (event: DragEvent) => {
   min-width: 0;
   height: 100%;
   background: var(--yc-surface);
+  transition: box-shadow 0.15s ease;
+}
+.yc-pane.is-active {
+  box-shadow: inset 0 0 0 2px var(--yc-accent);
 }
 .yc-pane__bar {
   flex: none;
@@ -386,6 +399,8 @@ const onDropZone = (event: DragEvent) => {
   color: var(--yc-text-2);
   font-size: 12.5px;
   cursor: default;
+  user-select: none;
+  -webkit-user-drag: element;
 }
 .yc-pane__row:hover {
   background: var(--yc-surface-2);

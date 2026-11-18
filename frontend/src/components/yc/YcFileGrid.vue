@@ -167,6 +167,8 @@ const onDragStart = (item: ResourceItem, event: DragEvent) => {
   if (!event.dataTransfer) return;
   event.dataTransfer.setData("text/yc-reorder", item.name);
   event.dataTransfer.effectAllowed = "move";
+  const card = event.currentTarget as HTMLElement | null;
+  if (card) event.dataTransfer.setDragImage(card, 20, 20);
 };
 
 const onDrop = (item: ResourceItem, event: DragEvent) => {
@@ -260,6 +262,8 @@ const onDrop = (item: ResourceItem, event: DragEvent) => {
   cursor: default;
   transition: border-color 0.15s ease, box-shadow 0.15s ease,
     background 0.15s ease;
+  user-select: none;
+  -webkit-user-drag: element;
 }
 .yc-card:hover {
   border-color: var(--yc-border-strong);

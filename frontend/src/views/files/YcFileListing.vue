@@ -75,6 +75,8 @@
               :selected="fileStore.selected"
               controlled
               external-navigation
+              :active="activePane === 'left'"
+              @activate="activePane = 'left'"
               @select="onPaneSelect"
               @open="open"
               @context="openMenu"
@@ -84,6 +86,8 @@
             <YcPane
               class="yc-dual__pane"
               :path="rightPath"
+              :active="activePane === 'right'"
+              @activate="activePane = 'right'"
               @open="open"
               @drop-files="onDropFiles"
             />
@@ -94,6 +98,8 @@
               :key="path + index"
               :path="path"
               external-navigation
+              :active="activePane === index"
+              @activate="activePane = index"
               @navigate="(target) => onColumnNavigate(index, target)"
               @open="open"
               @drop-files="onDropFiles"
@@ -331,7 +337,15 @@ const columnPaths = computed(() => {
 });
 
 const rightPath = ref("/");
+const activePane = ref<string | number>("left");
 const columns = ref<string[]>(columnPaths.value);
+
+watch(
+  () => yc.viewMode,
+  (mode) => {
+    activePane.value = mode === "columns" ? 0 : "left";
+  }
+);
 
 watch(
   () => route.path,
